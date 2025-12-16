@@ -13,7 +13,7 @@
 
         <!-- ENTRY POINT -->
         <activity
-            android:name=".view.activity.WelcomeActivity"
+            android:name=".view.activity.BeritaActivity"
             android:exported="true">
 
             <intent-filter>
@@ -27,7 +27,7 @@
         <activity
             android:name=".view.activity.LoginActivity"
             android:exported="false" />
-
+*+
         <!-- MAIN -->
         <activity
             android:name=".view.activity.HomeActivity"
@@ -44,8 +44,10 @@
             android:name=".view.activity.ProfileActivity"
             android:exported="false" />
 
+
+
         <activity
-            android:name=".view.screen.profile.EditProfileActivity"
+            android:name=".view.activity.EditProfileActivity"
             android:exported="false" />
 
         <!-- BOTTOM NAV -->
