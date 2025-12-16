@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "919263438218",
+    "project_id": "ddwacan-app",
+    "storage_bucket": "ddwacan-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:919263438218:android:fbd42ef71d7d12e2fa9473",
+        "android_client_info": {
+          "package_name": "id.app.ddwancan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDL644Syfz_zT-pps-tpZnMlNZFFBTccj8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

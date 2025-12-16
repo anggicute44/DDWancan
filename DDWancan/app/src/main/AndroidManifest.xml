@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:allowBackup="true"
+        android:label="DDWancan"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.DDWancan">
+
+        <!-- ENTRY POINT -->
+        <activity
+            android:name=".view.activity.WelcomeActivity"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
+
+        <!-- AUTH -->
+        <activity
+            android:name=".view.activity.LoginActivity"
+            android:exported="false" />
+
+        <!-- MAIN -->
+        <activity
+            android:name=".view.activity.HomeActivity"
+            android:exported="false" />
+
+        <!-- CATEGORY -->
+        <activity
+            android:name="id.app.ddwancan.view.activity.CategoryActivity"
+            android:exported="false" />
+
+
+        <!-- PROFILE -->
+        <activity
+            android:name=".view.activity.ProfileActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".view.screen.profile.EditProfileActivity"
+            android:exported="false" />
+
+        <!-- BOTTOM NAV -->
+        <activity android:name=".view.activity.SearchActivity" />
+        <activity android:name=".view.activity.FavoriteActivity" />
+
+    </application>
+
+</manifest>
