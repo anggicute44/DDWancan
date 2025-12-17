@@ -9,34 +9,32 @@ import kotlinx.coroutines.launch
 
 class NewsViewModel : ViewModel() {
 
-    // State untuk menyimpan list berita
     private val _newsList = mutableStateOf<List<Article>>(emptyList())
     val newsList: State<List<Article>> = _newsList
 
-    // State untuk loading
     private val _isLoading = mutableStateOf(false)
     val isLoading: State<Boolean> = _isLoading
 
-    // State untuk error message
     private val _errorMessage = mutableStateOf<String?>(null)
     val errorMessage: State<String?> = _errorMessage
 
-    init {
-        fetchNews()
-    }
-
-    private fun fetchNews() {
+    fun fetchNews(category: String?) {
         viewModelScope.launch {
             _isLoading.value = true
+            _errorMessage.value = null // ✅ reset error
+
             try {
-                // Ganti API KEY di sini
-                val response = RetrofitClient.apiService.getTopHeadlines(apiKey = "39b789cf17324dc9bc343edb18ab7e24")
+                val response = RetrofitClient.apiService.getTopHeadlines(
+                    category = category,
+                    apiKey = "39b789cf17324dc9bc343edb18ab7e24"
+                )
                 _newsList.value = response.articles
             } catch (e: Exception) {
-                _errorMessage.value = "Error: ${e.message}"
+                _errorMessage.value = e.message
             } finally {
                 _isLoading.value = false
             }
         }
     }
 }
+

@@ -11,9 +11,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DDWancan">
 
-        <!-- ENTRY POINT -->
+        <!-- ✅ ENTRY POINT (WAJIB SATU SAJA) -->
         <activity
-            android:name=".view.activity.BeritaActivity"
+            android:name=".view.activity.WelcomeActivity"
             android:exported="true">
 
             <intent-filter>
@@ -27,28 +27,36 @@
         <activity
             android:name=".view.activity.LoginActivity"
             android:exported="false" />
-*+
-        <!-- MAIN -->
+
+        <!-- HOME -->
         <activity
             android:name=".view.activity.HomeActivity"
             android:exported="false" />
 
-        <!-- CATEGORY -->
+        <!-- BERITA API -->
         <activity
-            android:name="id.app.ddwancan.view.activity.CategoryActivity"
+            android:name=".view.activity.BeritaActivity"
             android:exported="false" />
 
+
+        <!-- CATEGORY -->
+        <activity
+            android:name=".view.activity.CategoryActivity"
+            android:exported="false" />
 
         <!-- PROFILE -->
         <activity
             android:name=".view.activity.ProfileActivity"
             android:exported="false" />
 
-
-
         <activity
             android:name=".view.activity.EditProfileActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".view.activity.ArticleDetailActivity"
+            android:exported="false" />
+
 
         <!-- BOTTOM NAV -->
         <activity android:name=".view.activity.SearchActivity" />

@@ -16,18 +16,23 @@ import kotlinx.coroutines.launch
 
 class BeritaActivity : ComponentActivity() {
 
-    // Inisialisasi ViewModel
     private val viewModel by viewModels<NewsViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val category = intent.getStringExtra(EXTRA_CATEGORY)
+
+        viewModel.fetchNews(category)
+
         setContent {
-            // Panggil Theme bawaan project (biasanya dibuat otomatis)
-            // Ganti 'YourAppTheme' dengan nama theme project Anda
-            MaterialTheme {
-                // Panggil Screen Composable yang kita buat
+            DDwancanTheme {
                 NewsListScreen(viewModel = viewModel)
             }
         }
+    }
+
+    companion object {
+        const val EXTRA_CATEGORY = "EXTRA_CATEGORY"
     }
 }

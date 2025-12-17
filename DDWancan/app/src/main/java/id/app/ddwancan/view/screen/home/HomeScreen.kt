@@ -12,7 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,64 +23,119 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberAsyncImagePainter
 import id.app.ddwancan.R
-
-import id.app.ddwancan.data.model.Berita
-import id.app.ddwancan.view.activity.CategoryActivity
+import id.app.ddwancan.data.model.Article
+import id.app.ddwancan.data.model.NewsViewModel
+import id.app.ddwancan.view.activity.ArticleDetailActivity
 import id.app.ddwancan.view.activity.FavoriteActivity
 import id.app.ddwancan.view.activity.ProfileActivity
 import id.app.ddwancan.view.activity.SearchActivity
 
 /* ============================================================
-   DUMMY DATA
-============================================================ */
-private val dummyBerita = listOf(
-    Berita(1, "Universitas dan Organisasi Turki", "UKDW Perluas Jejaring...", "news", 20, "3 Hours ago"),
-    Berita(2, "Dies Natalis UKDW", "Fun Run meriah penuh semangat!", "news", 55, "7 Hours ago"),
-    Berita(3, "Duta Voice Raih Emas", "Prestasi International Bandung Festival", "news", 150, "12 Hours ago")
-)
-
-/* ============================================================
-   HOME SCREEN
+   HOME SCREEN (API VERSION)
 ============================================================ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
+
+fun HomeScreen(
+    viewModel: NewsViewModel = viewModel()
+) {
     val context = LocalContext.current
+
+    val newsList by viewModel.newsList
+    val isLoading by viewModel.isLoading
+    val errorMessage by viewModel.errorMessage
+
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
+
+    // 🔥 fetch pertama kali
+    LaunchedEffect(selectedCategory) {
+        viewModel.fetchNews(selectedCategory)
+    }
 
     Scaffold(
         topBar = { HomeTopBar() },
-        bottomBar = { HomeBottomBar(context) },
-        containerColor = Color.White
+        bottomBar = { HomeBottomBar(context) }
     ) { padding ->
-        HomeContent(
-            modifier = Modifier.padding(padding),
-            onCategoryClick = { category ->
-                val intent = Intent(context, CategoryActivity::class.java)
-                intent.putExtra("CATEGORY", category)
-                context.startActivity(intent)
+
+        when {
+            isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
-        )
+
+            errorMessage != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = errorMessage ?: "Terjadi kesalahan",
+                        color = Color.Red
+                    )
+                }
+            }
+
+            else -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(horizontal = 16.dp)
+                ) {
+
+                    item {
+                        Spacer(Modifier.height(16.dp))
+                        CategoryChips(
+                            selectedCategory = selectedCategory,
+                            onCategoryClick = { selectedCategory = it }
+                        )
+                        Spacer(Modifier.height(24.dp))
+                        Text(
+                            "News Today",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        BreakingNewsImage()
+                        Spacer(Modifier.height(24.dp))
+                    }
+
+                    items(newsList) { article ->
+                        ApiNewsCard(article) {
+                            val intent =
+                                Intent(context, ArticleDetailActivity::class.java).apply {
+                                    putExtra("TITLE", article.title)
+                                    putExtra("CONTENT", article.description ?: "")
+                                    putExtra("IMAGE", article.urlToImage)
+                                    putExtra("URL", article.url)
+                                }
+                            context.startActivity(intent)
+                        }
+                    }
+
+                    item { Spacer(Modifier.height(24.dp)) }
+                }
+            }
+        }
     }
 }
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun BreakingNewsImage() {
-    Image(
-        painter = painterResource(R.drawable.logo2),
-        contentDescription = null,
-        contentScale = ContentScale.Crop,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(170.dp)
-            .background(Color.LightGray, RoundedCornerShape(12.dp))
-    )
-}
+
+
 /* ============================================================
-   TOP BAR (LOGO TENGAH)
+   TOP BAR
 ============================================================ */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class) // Ditambahkan: Untuk CenterAlignedTopAppBar
 @Composable
 fun HomeTopBar() {
     CenterAlignedTopAppBar(
@@ -99,57 +154,69 @@ fun HomeTopBar() {
 }
 
 /* ============================================================
-   CONTENT
+   BREAKING IMAGE
 ============================================================ */
 @Composable
-fun HomeContent(
-    modifier: Modifier = Modifier,
-    onCategoryClick: (String) -> Unit
-) {
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
-    ) {
-
-        item {
-            Spacer(Modifier.height(16.dp))
-            CategoryChips(onCategoryClick)
-            Spacer(Modifier.height(24.dp))
-            Text("News Today", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(12.dp))
-            BreakingNewsImage()
-            Spacer(Modifier.height(24.dp))
-        }
-
-        items(dummyBerita) { berita ->
-            NewsCard(berita)
-        }
-
-        item { Spacer(Modifier.height(16.dp)) }
-    }
+fun BreakingNewsImage() {
+    Image(
+        painter = painterResource(R.drawable.logo2),
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(170.dp)
+            .background(Color.LightGray, RoundedCornerShape(12.dp))
+    )
 }
 
 /* ============================================================
-   CATEGORY CHIPS
+   CATEGORY CHIPS (NEWS API)
 ============================================================ */
 @Composable
-fun CategoryChips(onCategoryClick: (String) -> Unit) {
+fun CategoryChips(
+    selectedCategory: String?,
+    onCategoryClick: (String?) -> Unit
+) {
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        item { ChipItem("All", true) { onCategoryClick("all") } }
-        item { ChipItem("Teknologi") { onCategoryClick("teknologi") } }
-        item { ChipItem("Edukasi") { onCategoryClick("edukasi") } }
-        item { ChipItem("Sosial") { onCategoryClick("sosial") } }
-        item { ChipItem("Kesehatan") { onCategoryClick("kesehatan") } }
-        item { ChipItem("Olahraga") { onCategoryClick("olahraga") } }
-        item { ChipItem("Seni") { onCategoryClick("seni") } }
+
+        // PERBAIKAN: Bungkus setiap CategoryChip dengan item { ... }
+        item {
+            CategoryChip("All", selectedCategory == null) {
+                onCategoryClick(null)
+            }
+        }
+        item {
+            CategoryChip("Technology", selectedCategory == "technology") {
+                onCategoryClick("technology")
+            }
+        }
+        item {
+            CategoryChip("Health", selectedCategory == "health") {
+                onCategoryClick("health")
+            }
+        }
+        item {
+            CategoryChip("Sports", selectedCategory == "sports") {
+                onCategoryClick("sports")
+            }
+        }
+        item {
+            CategoryChip("Business", selectedCategory == "business") {
+                onCategoryClick("business")
+            }
+        }
+        item {
+            CategoryChip("Science", selectedCategory == "science") {
+                onCategoryClick("science")
+            }
+        }
     }
 }
 
 @Composable
-fun ChipItem(
+fun CategoryChip(
     text: String,
-    selected: Boolean = false,
+    selected: Boolean,
     onClick: () -> Unit
 ) {
     Surface(
@@ -161,7 +228,8 @@ fun ChipItem(
             text = text,
             fontSize = 14.sp,
             color = if (selected) Color.White else Color(0xFF2678FF),
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp)
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
         )
     }
 }
@@ -170,14 +238,17 @@ fun ChipItem(
    NEWS CARD
 ============================================================ */
 @Composable
-fun NewsCard(berita: Berita) {
+fun ApiNewsCard(
+    article: Article,
+    onClick: () -> Unit
+) {
     Surface(
-        shape = RoundedCornerShape(12.dp),
-        shadowElevation = 4.dp,
-        color = Color.White,
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        shadowElevation = 4.dp
     ) {
         Row(
             modifier = Modifier.padding(10.dp),
@@ -185,29 +256,21 @@ fun NewsCard(berita: Berita) {
         ) {
 
             Image(
-                painter = painterResource(R.drawable.news),
+                painter = rememberAsyncImagePainter(article.urlToImage),
                 contentDescription = null,
-                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(80.dp)
-                    .background(Color.LightGray, RoundedCornerShape(10.dp))
+                    .background(Color.LightGray, RoundedCornerShape(10.dp)),
+                contentScale = ContentScale.Crop
             )
 
             Spacer(Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(berita.judul, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                Text(berita.deskripsi, maxLines = 2, fontSize = 13.sp)
-                Spacer(Modifier.height(6.dp))
-                Row {
-                    Text("👁 ${berita.views}", fontSize = 12.sp)
-                    Spacer(Modifier.width(12.dp))
-                    Text(berita.createdAt, fontSize = 12.sp)
+                Text(article.title, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                article.description?.let {
+                    Text(it, maxLines = 2, fontSize = 13.sp)
                 }
-            }
-
-            IconButton(onClick = {}) {
-                Icon(Icons.Default.FavoriteBorder, contentDescription = "Favorite")
             }
         }
     }
@@ -220,7 +283,6 @@ fun NewsCard(berita: Berita) {
 fun HomeBottomBar(context: android.content.Context) {
     Column {
         HorizontalDivider(color = Color(0xFFE0E0E0))
-
         NavigationBar(containerColor = Color.White) {
 
             NavItem(Icons.Default.Home, "Home", true) {}
