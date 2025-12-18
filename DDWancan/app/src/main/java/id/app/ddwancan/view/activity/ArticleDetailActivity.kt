@@ -10,8 +10,8 @@ class ArticleDetailActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Ambil data dari Intent
-        val articleId = intent.getStringExtra("ARTICLE_ID") ?: ""
+        // Ambil data dari Intent, termasuk ID sumber berita
+        val sourceId = intent.getStringExtra("SOURCE_ID") ?: "unknown"
         val title = intent.getStringExtra("TITLE") ?: ""
         val content = intent.getStringExtra("CONTENT") ?: "Konten tidak tersedia"
         val imageUrl = intent.getStringExtra("IMAGE")
@@ -19,12 +19,12 @@ class ArticleDetailActivity : ComponentActivity() {
 
         setContent {
             ArticleDetailScreen(
-                articleId = articleId,
+                sourceId = sourceId, // Teruskan sourceId ke Composable
                 title = title,
                 content = content,
                 imageUrl = imageUrl,
-                articleUrl = articleUrl, // 🔥 Kirim URL ke Composable
-                onBack = { finish() } // 🔥 Tambahkan fungsi onBack untuk menutup Activity
+                articleUrl = articleUrl,
+                onBack = { finish() }
             )
         }
     }

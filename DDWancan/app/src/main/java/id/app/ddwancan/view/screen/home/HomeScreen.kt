@@ -33,24 +33,17 @@ import id.app.ddwancan.view.activity.FavoriteActivity
 import id.app.ddwancan.view.activity.ProfileActivity
 import id.app.ddwancan.view.activity.SearchActivity
 
-/* ============================================================
-   HOME SCREEN (API VERSION)
-============================================================ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-
 fun HomeScreen(
     viewModel: NewsViewModel = viewModel()
 ) {
     val context = LocalContext.current
-
     val newsList by viewModel.newsList
     val isLoading by viewModel.isLoading
     val errorMessage by viewModel.errorMessage
-
     var selectedCategory by remember { mutableStateOf<String?>(null) }
 
-    // 🔥 fetch pertama kali
     LaunchedEffect(selectedCategory) {
         viewModel.fetchNews(selectedCategory)
     }
@@ -59,53 +52,26 @@ fun HomeScreen(
         topBar = { HomeTopBar() },
         bottomBar = { HomeBottomBar(context) }
     ) { padding ->
-
         when {
             isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
-
             errorMessage != null -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = errorMessage ?: "Terjadi kesalahan",
-                        color = Color.Red
-                    )
+                Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                    Text(text = errorMessage ?: "Terjadi kesalahan", color = Color.Red)
                 }
             }
-
             else -> {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                        .padding(horizontal = 16.dp)
+                    modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp)
                 ) {
-
                     item {
                         Spacer(Modifier.height(16.dp))
-                        CategoryChips(
-                            selectedCategory = selectedCategory,
-                            onCategoryClick = { selectedCategory = it }
-                        )
+                        CategoryChips(selectedCategory = selectedCategory, onCategoryClick = { selectedCategory = it })
                         Spacer(Modifier.height(24.dp))
-                        Text(
-                            "News Today",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text("News Today", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(12.dp))
                         BreakingNewsImage()
                         Spacer(Modifier.height(24.dp))
@@ -113,13 +79,13 @@ fun HomeScreen(
 
                     items(newsList) { article ->
                         ApiNewsCard(article) {
-                            val intent =
-                                Intent(context, ArticleDetailActivity::class.java).apply {
-                                    putExtra("TITLE", article.title)
-                                    putExtra("CONTENT", article.description ?: "")
-                                    putExtra("IMAGE", article.urlToImage)
-                                    putExtra("URL", article.url)
-                                }
+                            val intent = Intent(context, ArticleDetailActivity::class.java).apply {
+                                putExtra("SOURCE_ID", article.source?.id)
+                                putExtra("TITLE", article.title)
+                                putExtra("CONTENT", article.description ?: "")
+                                putExtra("IMAGE", article.urlToImage)
+                                putExtra("URL", article.url)
+                            }
                             context.startActivity(intent)
                         }
                     }

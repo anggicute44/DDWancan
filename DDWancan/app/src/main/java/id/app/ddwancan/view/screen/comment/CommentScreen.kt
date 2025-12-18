@@ -1,30 +1,35 @@
 package id.app.ddwancan.view.screen.comment
 
+import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import id.app.ddwancan.data.utils.UserSession
+import id.app.ddwancan.viewmodel.CommentViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommentScreen(
+    viewModel: CommentViewModel,
     articleId: String,
     title: String,
     onBack: () -> Unit
 ) {
-    // 🔹 state input komentar
     var input by remember { mutableStateOf("") }
 
-    // 🔹 list komentar (sementara / lokal)
-    val comments = remember {
-        mutableStateListOf<Pair<String, String>>() // Pair<name, message>
+    LaunchedEffect(articleId) {
+        viewModel.loadComments(articleId)
     }
 
     Scaffold(
@@ -46,34 +51,27 @@ fun CommentScreen(
                 .fillMaxSize()
         ) {
 
-            // 📃 LIST KOMENTAR
+            if (viewModel.loading.value) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
+
             LazyColumn(
                 modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(16.dp)
+                contentPadding = PaddingValues(16.dp),
+                reverseLayout = true
             ) {
-                if (comments.isEmpty()) {
-                    item {
-                        Text(
-                            text = "Belum ada komentar",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                } else {
-                    items(comments) { comment ->
-                        Text(comment.first, fontWeight = FontWeight.Bold)
-                        Text(comment.second)
-                        Spacer(Modifier.height(12.dp))
-                    }
+                items(viewModel.comments.value.reversed()) { comment ->
+                    Text(comment.id_user, fontWeight = FontWeight.Bold)
+                    Text(comment.komentar)
+                    Spacer(Modifier.height(12.dp))
                 }
             }
 
             HorizontalDivider()
 
-            // ✍️ INPUT KOMENTAR
             Row(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .fillMaxWidth()
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedTextField(
                     value = input,
@@ -84,18 +82,8 @@ fun CommentScreen(
 
                 Spacer(Modifier.width(8.dp))
 
-                IconButton(
-                    onClick = {
-                        if (input.isNotBlank()) {
-                            comments.add(
-                                "Josephine Marcelia" to input
-                            )
-                            input = ""
-                        }
-                    }
-                ) {
-                    Icon(Icons.Default.Send, contentDescription = "Send")
-                }
+                // --- PERBAIKAN: Mengganti IconButton dengan Icon + Modifier.clickable ---
+                
             }
         }
     }
