@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="id.app.ddwancan" />
+                  <option name="mobileSdkAppId" value="1:919263438218:android:fbd42ef71d7d12e2fa9473" />
+                  <option name="projectId" value="ddwacan-app" />
+                  <option name="projectNumber" value="919263438218" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

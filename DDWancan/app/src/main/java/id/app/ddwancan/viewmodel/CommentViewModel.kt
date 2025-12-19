@@ -28,6 +28,12 @@ class CommentViewModel : ViewModel() {
         _loading.value = true
         val documentId = URLEncoder.encode(articleUrl, StandardCharsets.UTF_8.toString())
 
+        Log.d("CommentViewModel", "=== LOAD COMMENTS ===")
+        Log.d("CommentViewModel", "sourceId: $sourceId")
+        Log.d("CommentViewModel", "articleUrl: $articleUrl")
+        Log.d("CommentViewModel", "documentId (encoded): $documentId")
+        Log.d("CommentViewModel", "Firestore Path: Comment/$sourceId/Articles/$documentId/Comments")
+
         // Path baru yang lebih terstruktur
         db.collection("Comment")
             .document(sourceId)
@@ -38,10 +44,12 @@ class CommentViewModel : ViewModel() {
             .addSnapshotListener { snapshot, e ->
                 _loading.value = false
                 if (e != null) {
+                    Log.e("CommentViewModel", "Error loading comments: ${e.message}", e)
                     _error.value = e.localizedMessage
                     return@addSnapshotListener
                 }
                 if (snapshot != null) {
+                    Log.d("CommentViewModel", "Comments loaded: ${snapshot.size()} items")
                     _comments.value = snapshot.toObjects(Comment::class.java)
                 }
             }
@@ -54,7 +62,14 @@ class CommentViewModel : ViewModel() {
         message: String,
         onDone: () -> Unit
     ) {
+        Log.d("CommentViewModel", "=== SEND COMMENT ===")
+        Log.d("CommentViewModel", "sourceId: $sourceId")
+        Log.d("CommentViewModel", "articleUrl: $articleUrl")
+        Log.d("CommentViewModel", "userId: $userId")
+        Log.d("CommentViewModel", "message: $message")
+
         if (userId.isNullOrBlank()) {
+            Log.e("CommentViewModel", "Error: User not logged in")
             _error.value = "User not logged in."
             return
         }
@@ -66,6 +81,10 @@ class CommentViewModel : ViewModel() {
             "waktu" to FieldValue.serverTimestamp()
         )
 
+        Log.d("CommentViewModel", "documentId (encoded): $documentId")
+        Log.d("CommentViewModel", "Firestore Path: Comment/$sourceId/Articles/$documentId/Comments")
+        Log.d("CommentViewModel", "Comment Data: $commentData")
+
         // Path baru yang lebih terstruktur
         db.collection("Comment")
             .document(sourceId)
@@ -73,7 +92,13 @@ class CommentViewModel : ViewModel() {
             .document(documentId)
             .collection("Comments")
             .add(commentData)
-            .addOnSuccessListener { onDone() }
-            .addOnFailureListener { e -> _error.value = e.localizedMessage }
+            .addOnSuccessListener { documentReference ->
+                Log.d("CommentViewModel", "✓ Comment successfully added with ID: ${documentReference.id}")
+                onDone()
+            }
+            .addOnFailureListener { e ->
+                Log.e("CommentViewModel", "✗ Failed to add comment: ${e.message}", e)
+                _error.value = e.localizedMessage
+            }
     }
 }

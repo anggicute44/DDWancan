@@ -12,8 +12,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import id.app.ddwancan.R
+import id.app.ddwancan.data.utils.UserSession
 import id.app.ddwancan.ui.theme.DDwancanTheme
 import id.app.ddwancan.view.screen.auth.LoginScreen
+import android.util.Log
 
 class LoginActivity : ComponentActivity() {
 
@@ -88,6 +90,14 @@ class LoginActivity : ComponentActivity() {
     }
 
     private fun goToHome() {
+        // Set UserSession dengan user ID dari Firebase Auth
+        val currentUser = auth.currentUser
+        UserSession.userId = currentUser?.uid
+        
+        Log.d("LoginActivity", "User logged in successfully")
+        Log.d("LoginActivity", "User ID: ${UserSession.userId}")
+        Log.d("LoginActivity", "User Email: ${currentUser?.email}")
+        
         startActivity(Intent(this, HomeActivity::class.java))
         finish()
     }

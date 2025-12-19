@@ -23,13 +23,14 @@ import id.app.ddwancan.viewmodel.CommentViewModel
 fun CommentScreen(
     viewModel: CommentViewModel,
     articleId: String,
+    articleUrl: String,
     title: String,
     onBack: () -> Unit
 ) {
     var input by remember { mutableStateOf("") }
 
     LaunchedEffect(articleId) {
-        viewModel.loadComments(articleId)
+        viewModel.loadComments(sourceId = articleId, articleUrl = articleUrl)
     }
 
     Scaffold(
