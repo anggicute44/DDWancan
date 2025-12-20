@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState // Tambahan untuk scroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Send
@@ -24,6 +25,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import id.app.ddwancan.data.utils.UserSession
 import id.app.ddwancan.viewmodel.CommentViewModel
+import kotlinx.coroutines.launch // Tambahan untuk coroutine scroll
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,25 +40,23 @@ fun ArticleDetailScreen(
 ) {
     val context = LocalContext.current
     var commentText by remember { mutableStateOf("") }
-
-    // --- 1. CEK ADMIN ---
-    // Logika sederhana: User dianggap admin jika emailnya 'admin' atau ID tertentu.
-    // Sesuaikan logika ini dengan sistem login Anda yang sebenarnya.
-    // Jika Anda menyimpan role di UserSession, gunakan itu.
-    // Contoh hardcode untuk sementara (berdasarkan diskusi login sebelumnya):
     val currentUserId = UserSession.userId
-    // PENTING: Ganti logika ini dengan pengecekan role yang valid dari backend/session Anda.
-    // Misal: val isAdmin = UserSession.role == "admin"
-    // Di sini saya asumsikan jika ID user tidak null, kita cek logic admin Anda.
-    // Untuk demo, mari kita anggap user bisa menghapus komentarnya sendiri atau admin menghapus semua.
-    // Tapi sesuai request Anda "Admin mengelola comment", kita butuh flag isAdmin.
 
-    // TODO: Ganti logic ini dengan logic Admin yang benar dari UserSession Anda
-    val isAdmin = false // Ubah ke true untuk mengetes tampilan tombol hapus, atau ambil dari Session
+    // State untuk mengontrol scroll list
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
     // Memuat komentar saat layar dibuka
     LaunchedEffect(articleUrl) {
         commentViewModel.loadComments(sourceId = sourceId, articleUrl = articleUrl)
+    }
+
+    // Efek samping: Jika jumlah komentar bertambah (ada komentar baru masuk), scroll ke bawah
+    LaunchedEffect(commentViewModel.comments.value.size) {
+        if (commentViewModel.comments.value.isNotEmpty()) {
+            // Scroll ke item terakhir (paling baru)
+            listState.animateScrollToItem(commentViewModel.comments.value.size - 1)
+        }
     }
 
     Scaffold(
@@ -72,6 +72,7 @@ fun ArticleDetailScreen(
         }
     ) { paddingValues ->
         LazyColumn(
+            state = listState, // Pasang state scroll di sini
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize()
@@ -141,22 +142,7 @@ fun ArticleDetailScreen(
                 }
             } else {
                 items(comments) { comment ->
-                    // Menggunakan component CommentItem yang sudah kita perbarui
-                    CommentItem(
-                        comment = comment,
-                        isAdmin = isAdmin, // Mengirim status admin ke item
-                        onDeleteClick = { commentId ->
-                            // Panggil ViewModel untuk menghapus
-                            commentViewModel.deleteComment(
-                                sourceId = sourceId,
-                                articleUrl = articleUrl,
-                                commentId = commentId,
-                                onSuccess = {
-                                    Toast.makeText(context, "Komentar dihapus", Toast.LENGTH_SHORT).show()
-                                }
-                            )
-                        }
-                    )
+                    CommentItem(comment = comment)
                 }
             }
 
@@ -174,7 +160,6 @@ fun ArticleDetailScreen(
                     IconButton(
                         onClick = {
                             if (commentText.isNotBlank()) {
-                                // Pastikan user login sebelum kirim
                                 if (currentUserId != null) {
                                     commentViewModel.sendComment(
                                         sourceId = sourceId,
@@ -182,8 +167,12 @@ fun ArticleDetailScreen(
                                         userId = currentUserId,
                                         message = commentText,
                                         onDone = {
-                                            commentText = ""
+                                            commentText = "" // 1. Kosongkan input
                                             Toast.makeText(context, "Komentar terkirim", Toast.LENGTH_SHORT).show()
+
+                                            // 2. REFETCH / RELOAD DATA (Sesuai request)
+                                            // Ini akan memicu pengambilan data ulang dari server
+                                            commentViewModel.loadComments(sourceId, articleUrl)
                                         }
                                     )
                                 } else {
@@ -195,7 +184,6 @@ fun ArticleDetailScreen(
                         Icon(Icons.Filled.Send, contentDescription = "Send", tint = MaterialTheme.colorScheme.primary)
                     }
                 }
-                // Spacer tambahan agar tidak tertutup navigation bar jika ada
                 Spacer(Modifier.height(80.dp))
             }
         }

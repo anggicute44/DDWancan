@@ -17,11 +17,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Data class sederhana untuk item menu
 data class AdminMenuItem(
     val title: String,
     val icon: ImageVector,
-    val id: String // ID unik untuk handling klik
+    val id: String
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,9 +29,10 @@ fun AdminDashboardScreen(
     onMenuClick: (String) -> Unit,
     onLogoutClick: () -> Unit
 ) {
-    // Daftar Menu Dashboard
+    // Daftar Menu Dashboard - DITAMBAHKAN MENU KOMENTAR
     val menuItems = listOf(
-        AdminMenuItem("Kelola User", Icons.Default.Person, "manage_users")
+        AdminMenuItem("Kelola User", Icons.Default.Person, "manage_users"),
+        AdminMenuItem("Kelola Komentar", Icons.Default.Comment, "manage_comments") // <-- Baru
     )
 
     Scaffold(
@@ -61,7 +61,6 @@ fun AdminDashboardScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            // Header Selamat Datang
             Text(
                 text = "Halo, Administrator!",
                 fontSize = 20.sp,
@@ -75,9 +74,8 @@ fun AdminDashboardScreen(
                 modifier = Modifier.padding(bottom = 24.dp)
             )
 
-            // Grid Menu
             LazyVerticalGrid(
-                columns = GridCells.Fixed(2), // 2 Kolom
+                columns = GridCells.Fixed(2),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {

@@ -4,12 +4,10 @@ import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import id.app.ddwancan.data.model.Comment
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 class CommentViewModel : ViewModel() {
 
@@ -24,37 +22,30 @@ class CommentViewModel : ViewModel() {
     private val _error = mutableStateOf<String?>(null)
     val error: State<String?> = _error
 
+    // --- 1. LOAD COMMENTS (DENGAN STRUKTUR FLAT) ---
     fun loadComments(sourceId: String, articleUrl: String) {
         _loading.value = true
-        val documentId = URLEncoder.encode(articleUrl, StandardCharsets.UTF_8.toString())
 
-        Log.d("CommentViewModel", "=== LOAD COMMENTS ===")
-        Log.d("CommentViewModel", "sourceId: $sourceId")
-        Log.d("CommentViewModel", "articleUrl: $articleUrl")
-        Log.d("CommentViewModel", "documentId (encoded): $documentId")
-        Log.d("CommentViewModel", "Firestore Path: Comment/$sourceId/Articles/$documentId/Comments")
-
-        // Path baru yang lebih terstruktur
+        // Tidak perlu encode URL lagi untuk path, karena sekarang URL jadi value field
+        // Query: Cari di koleksi "Comment" yang field "article_url" == URL berita ini
         db.collection("Comment")
-            .document(sourceId)
-            .collection("Articles")
-            .document(documentId)
-            .collection("Comments")
+            .whereEqualTo("article_url", articleUrl) // <--- FILTER PENTING
             .orderBy("waktu", Query.Direction.ASCENDING)
             .addSnapshotListener { snapshot, e ->
                 _loading.value = false
                 if (e != null) {
-                    Log.e("CommentViewModel", "Error loading comments: ${e.message}", e)
+                    Log.e("CommentViewModel", "Error loading: ${e.message}")
                     _error.value = e.localizedMessage
                     return@addSnapshotListener
                 }
                 if (snapshot != null) {
-                    Log.d("CommentViewModel", "Comments loaded: ${snapshot.size()} items")
-                    _comments.value = snapshot.toObjects(Comment::class.java)
+                    val list = snapshot.toObjects(Comment::class.java)
+                    _comments.value = list
                 }
             }
     }
 
+    // --- 2. SEND COMMENT (DENGAN STRUKTUR FLAT) ---
     fun sendComment(
         sourceId: String,
         articleUrl: String,
@@ -62,73 +53,60 @@ class CommentViewModel : ViewModel() {
         message: String,
         onDone: () -> Unit
     ) {
-        Log.d("CommentViewModel", "=== SEND COMMENT ===")
-        Log.d("CommentViewModel", "sourceId: $sourceId")
-        Log.d("CommentViewModel", "articleUrl: $articleUrl")
-        Log.d("CommentViewModel", "userId: $userId")
-        Log.d("CommentViewModel", "message: $message")
-
         if (userId.isNullOrBlank()) {
-            Log.e("CommentViewModel", "Error: User not logged in")
             _error.value = "User not logged in."
             return
         }
 
-        val documentId = URLEncoder.encode(articleUrl, StandardCharsets.UTF_8.toString())
-        val commentData = hashMapOf(
-            "id_user" to userId,
-            "komentar" to message,
-            "waktu" to FieldValue.serverTimestamp()
-        )
+        // Ambil nama user dulu
+        db.collection("User").document(userId).get()
+            .addOnSuccessListener { documentSnapshot ->
+                var userName = "Unknown User"
+                if (documentSnapshot.exists()) {
+                    userName = documentSnapshot.getString("name") ?: "Unknown"
+                }
 
-        Log.d("CommentViewModel", "documentId (encoded): $documentId")
-        Log.d("CommentViewModel", "Firestore Path: Comment/$sourceId/Articles/$documentId/Comments")
-        Log.d("CommentViewModel", "Comment Data: $commentData")
+                // DATA YANG DISIMPAN (FLAT)
+                val commentData = hashMapOf(
+                    "id_user" to userId,
+                    "nama_user" to userName,
+                    "komentar" to message,
+                    "waktu" to FieldValue.serverTimestamp(),
 
-        // Path baru yang lebih terstruktur
-        db.collection("Comment")
-            .document(sourceId)
-            .collection("Articles")
-            .document(documentId)
-            .collection("Comments")
-            .add(commentData)
-            .addOnSuccessListener { documentReference ->
-                Log.d("CommentViewModel", "✓ Comment successfully added with ID: ${documentReference.id}")
-                onDone()
+                    // Kita simpan ID Berita di dalam dokumen komentar
+                    "article_url" to articleUrl,
+                    "source_id" to sourceId
+                )
+
+                // Simpan langsung ke root collection "Comment"
+                db.collection("Comment")
+                    .add(commentData)
+                    .addOnSuccessListener {
+                        onDone()
+                    }
+                    .addOnFailureListener { e ->
+                        _error.value = e.localizedMessage
+                    }
             }
-            .addOnFailureListener { e ->
-                Log.e("CommentViewModel", "✗ Failed to add comment: ${e.message}", e)
-                _error.value = e.localizedMessage
+            .addOnFailureListener {
+                _error.value = "Gagal ambil user"
             }
     }
 
-    // --- TAMBAHAN BARU: FUNGSI HAPUS UNTUK ADMIN ---
+    // --- 3. DELETE COMMENT (ADMIN) ---
     fun deleteComment(
-        sourceId: String,
-        articleUrl: String,
-        commentId: String, // ID dokumen komentar yang mau dihapus
+        // sourceId & articleUrl TIDAK DIPERLUKAN LAGI UNTUK HAPUS (karena pathnya langsung)
+        commentId: String,
         onSuccess: () -> Unit
     ) {
-        Log.d("CommentViewModel", "=== DELETE COMMENT (ADMIN) ===")
-
-        // Encode URL agar path sesuai dengan saat load/send
-        val documentId = URLEncoder.encode(articleUrl, StandardCharsets.UTF_8.toString())
-
-        // Path harus persis sama dengan struktur database
-        val docRef = db.collection("Comment")
-            .document(sourceId)
-            .collection("Articles")
-            .document(documentId)
-            .collection("Comments")
-            .document(commentId) // Target dokumen spesifik
-
-        docRef.delete()
+        // Hapus langsung berdasarkan ID dokumen di root collection
+        db.collection("Comment")
+            .document(commentId)
+            .delete()
             .addOnSuccessListener {
-                Log.d("CommentViewModel", "✓ Comment deleted successfully: $commentId")
                 onSuccess()
             }
             .addOnFailureListener { e ->
-                Log.e("CommentViewModel", "✗ Failed to delete comment: ${e.message}", e)
                 _error.value = "Gagal menghapus: ${e.localizedMessage}"
             }
     }

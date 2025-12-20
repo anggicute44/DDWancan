@@ -82,9 +82,8 @@
             android:name=".view.activity.RegisterActivity"
             android:label="Manage Articles" />
 
-
-
-
+        <activity
+            android:name=".view.activity.ManageCommentsActivity"             android:label="Manage Comments"  />
 
 
 

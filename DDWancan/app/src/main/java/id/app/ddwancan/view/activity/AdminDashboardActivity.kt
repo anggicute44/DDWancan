@@ -32,6 +32,9 @@ class AdminDashboardActivity : ComponentActivity() {
             "manage_users" -> {
                 startActivity(Intent(this, ManageUsersActivity::class.java))
             }
+            "manage_comments" -> {
+                startActivity(Intent(this, ManageCommentsActivity::class.java))
+            }
         }
     }
 
@@ -49,4 +52,6 @@ class AdminDashboardActivity : ComponentActivity() {
         startActivity(intent)
         finish()
     }
+
+
 }
