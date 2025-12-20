@@ -78,6 +78,11 @@
             android:name=".view.activity.ManageUsersActivity"
             android:label="Manage Users" />
 
+        <activity
+            android:name=".view.activity.RegisterActivity"
+            android:label="Manage Articles" />
+
+
 
 
 

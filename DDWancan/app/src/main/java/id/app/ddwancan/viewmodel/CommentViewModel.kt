@@ -101,4 +101,35 @@ class CommentViewModel : ViewModel() {
                 _error.value = e.localizedMessage
             }
     }
+
+    // --- TAMBAHAN BARU: FUNGSI HAPUS UNTUK ADMIN ---
+    fun deleteComment(
+        sourceId: String,
+        articleUrl: String,
+        commentId: String, // ID dokumen komentar yang mau dihapus
+        onSuccess: () -> Unit
+    ) {
+        Log.d("CommentViewModel", "=== DELETE COMMENT (ADMIN) ===")
+
+        // Encode URL agar path sesuai dengan saat load/send
+        val documentId = URLEncoder.encode(articleUrl, StandardCharsets.UTF_8.toString())
+
+        // Path harus persis sama dengan struktur database
+        val docRef = db.collection("Comment")
+            .document(sourceId)
+            .collection("Articles")
+            .document(documentId)
+            .collection("Comments")
+            .document(commentId) // Target dokumen spesifik
+
+        docRef.delete()
+            .addOnSuccessListener {
+                Log.d("CommentViewModel", "✓ Comment deleted successfully: $commentId")
+                onSuccess()
+            }
+            .addOnFailureListener { e ->
+                Log.e("CommentViewModel", "✗ Failed to delete comment: ${e.message}", e)
+                _error.value = "Gagal menghapus: ${e.localizedMessage}"
+            }
+    }
 }

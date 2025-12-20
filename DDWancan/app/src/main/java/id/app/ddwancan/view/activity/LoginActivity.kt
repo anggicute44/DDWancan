@@ -58,15 +58,15 @@ class LoginActivity : ComponentActivity() {
                     onGoogleLogin = {
                         signInWithGoogle()
                     },
-                    // 👇 TAMBAHKAN BAGIAN INI
                     onAdminLoginClick = {
                         // Pindah ke halaman Login Admin
                         val intent = Intent(this, AdminLoginActivity::class.java)
                         startActivity(intent)
                     },
+                    // 👇 UPDATE BAGIAN INI AGAR MEMBUKA REGISTER ACTIVITY
                     onSignUpClick = {
-                        // Jika nanti ada halaman Register, tambahkan di sini
-                        Toast.makeText(this, "Fitur Register belum tersedia", Toast.LENGTH_SHORT).show()
+                        val intent = Intent(this, RegisterActivity::class.java)
+                        startActivity(intent)
                     }
                 )
             }

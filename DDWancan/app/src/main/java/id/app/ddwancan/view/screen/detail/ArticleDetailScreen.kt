@@ -1,7 +1,7 @@
 package id.app.ddwancan.view.screen.detail
 
 import android.content.Intent
-import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -39,6 +39,22 @@ fun ArticleDetailScreen(
     val context = LocalContext.current
     var commentText by remember { mutableStateOf("") }
 
+    // --- 1. CEK ADMIN ---
+    // Logika sederhana: User dianggap admin jika emailnya 'admin' atau ID tertentu.
+    // Sesuaikan logika ini dengan sistem login Anda yang sebenarnya.
+    // Jika Anda menyimpan role di UserSession, gunakan itu.
+    // Contoh hardcode untuk sementara (berdasarkan diskusi login sebelumnya):
+    val currentUserId = UserSession.userId
+    // PENTING: Ganti logika ini dengan pengecekan role yang valid dari backend/session Anda.
+    // Misal: val isAdmin = UserSession.role == "admin"
+    // Di sini saya asumsikan jika ID user tidak null, kita cek logic admin Anda.
+    // Untuk demo, mari kita anggap user bisa menghapus komentarnya sendiri atau admin menghapus semua.
+    // Tapi sesuai request Anda "Admin mengelola comment", kita butuh flag isAdmin.
+
+    // TODO: Ganti logic ini dengan logic Admin yang benar dari UserSession Anda
+    val isAdmin = false // Ubah ke true untuk mengetes tampilan tombol hapus, atau ambil dari Session
+
+    // Memuat komentar saat layar dibuka
     LaunchedEffect(articleUrl) {
         commentViewModel.loadComments(sourceId = sourceId, articleUrl = articleUrl)
     }
@@ -108,20 +124,39 @@ fun ArticleDetailScreen(
                 HorizontalDivider()
                 Spacer(Modifier.height(16.dp))
             }
-            
-            // BAGIAN KOMENTAR
+
+            // BAGIAN JUDUL KOMENTAR
             item { Text("Comments", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
             item { Spacer(Modifier.height(8.dp)) }
 
+            // --- 2. LIST KOMENTAR ---
             val comments by commentViewModel.comments
             if (comments.isEmpty()) {
-                item { Text("Belum ada komentar", color = Color.Gray) }
+                item {
+                    Text(
+                        "Belum ada komentar",
+                        color = Color.Gray,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
             } else {
                 items(comments) { comment ->
-                    Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                        Text(comment.id_user, fontWeight = FontWeight.Bold)
-                        Text(comment.komentar)
-                    }
+                    // Menggunakan component CommentItem yang sudah kita perbarui
+                    CommentItem(
+                        comment = comment,
+                        isAdmin = isAdmin, // Mengirim status admin ke item
+                        onDeleteClick = { commentId ->
+                            // Panggil ViewModel untuk menghapus
+                            commentViewModel.deleteComment(
+                                sourceId = sourceId,
+                                articleUrl = articleUrl,
+                                commentId = commentId,
+                                onSuccess = {
+                                    Toast.makeText(context, "Komentar dihapus", Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        }
+                    )
                 }
             }
 
@@ -129,7 +164,6 @@ fun ArticleDetailScreen(
             item {
                 Spacer(Modifier.height(16.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    // --- PERBAIKAN DI SINI ---
                     OutlinedTextField(
                         value = commentText,
                         onValueChange = { commentText = it },
@@ -140,21 +174,29 @@ fun ArticleDetailScreen(
                     IconButton(
                         onClick = {
                             if (commentText.isNotBlank()) {
-                                val currentUserId = UserSession.userId
-                                commentViewModel.sendComment(
-                                    sourceId = sourceId,
-                                    articleUrl = articleUrl,
-                                    userId = currentUserId,
-                                    message = commentText,
-                                    onDone = { commentText = "" }
-                                )
+                                // Pastikan user login sebelum kirim
+                                if (currentUserId != null) {
+                                    commentViewModel.sendComment(
+                                        sourceId = sourceId,
+                                        articleUrl = articleUrl,
+                                        userId = currentUserId,
+                                        message = commentText,
+                                        onDone = {
+                                            commentText = ""
+                                            Toast.makeText(context, "Komentar terkirim", Toast.LENGTH_SHORT).show()
+                                        }
+                                    )
+                                } else {
+                                    Toast.makeText(context, "Silakan login terlebih dahulu", Toast.LENGTH_SHORT).show()
+                                }
                             }
                         }
                     ) {
-                        Icon(Icons.Filled.Send, contentDescription = "Send")
+                        Icon(Icons.Filled.Send, contentDescription = "Send", tint = MaterialTheme.colorScheme.primary)
                     }
                 }
-                Spacer(Modifier.height(16.dp))
+                // Spacer tambahan agar tidak tertutup navigation bar jika ada
+                Spacer(Modifier.height(80.dp))
             }
         }
     }
