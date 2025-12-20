@@ -30,8 +30,7 @@ class AdminDashboardActivity : ComponentActivity() {
     private fun handleMenuNavigation(menuId: String) {
         when (menuId) {
             "manage_users" -> {
-                Toast.makeText(this, "Buka Fitur Kelola User", Toast.LENGTH_SHORT).show()
-                // Contoh: startActivity(Intent(this, ManageUsersActivity::class.java))
+                startActivity(Intent(this, ManageUsersActivity::class.java))
             }
             "finance_report" -> {
                 Toast.makeText(this, "Buka Laporan Keuangan", Toast.LENGTH_SHORT).show()

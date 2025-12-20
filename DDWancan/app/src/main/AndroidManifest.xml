@@ -74,6 +74,13 @@
             android:name=".view.activity.AdminHomeActivity"
             android:label="Admin Home" />
 
+        <activity
+            android:name=".view.activity.ManageUsersActivity"
+            android:label="Manage Users" />
+
+
+
+
 
 
     </application>
