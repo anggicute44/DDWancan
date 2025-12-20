@@ -2,6 +2,7 @@ package id.app.ddwancan.view.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -15,31 +16,24 @@ import id.app.ddwancan.R
 import id.app.ddwancan.data.utils.UserSession
 import id.app.ddwancan.ui.theme.DDwancanTheme
 import id.app.ddwancan.view.screen.auth.LoginScreen
-import android.util.Log
 
 class LoginActivity : ComponentActivity() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var googleClient: GoogleSignInClient
 
-    // ✅ INI YANG BENAR
     private val googleLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-
         try {
             val account = task.result
             val credential = GoogleAuthProvider.getCredential(account.idToken, null)
-
             auth.signInWithCredential(credential)
-                .addOnSuccessListener {
-                    goToHome()
-                }
+                .addOnSuccessListener { goToHome() }
                 .addOnFailureListener {
                     Toast.makeText(this, "Login Google gagal", Toast.LENGTH_SHORT).show()
                 }
-
         } catch (e: Exception) {
             Toast.makeText(this, "Login dibatalkan", Toast.LENGTH_SHORT).show()
         }
@@ -49,12 +43,10 @@ class LoginActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         auth = FirebaseAuth.getInstance()
-
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
-
         googleClient = GoogleSignIn.getClient(this, gso)
 
         setContent {
@@ -65,6 +57,16 @@ class LoginActivity : ComponentActivity() {
                     },
                     onGoogleLogin = {
                         signInWithGoogle()
+                    },
+                    // 👇 TAMBAHKAN BAGIAN INI
+                    onAdminLoginClick = {
+                        // Pindah ke halaman Login Admin
+                        val intent = Intent(this, AdminLoginActivity::class.java)
+                        startActivity(intent)
+                    },
+                    onSignUpClick = {
+                        // Jika nanti ada halaman Register, tambahkan di sini
+                        Toast.makeText(this, "Fitur Register belum tersedia", Toast.LENGTH_SHORT).show()
                     }
                 )
             }
@@ -76,28 +78,22 @@ class LoginActivity : ComponentActivity() {
             Toast.makeText(this, "Email & Password wajib diisi", Toast.LENGTH_SHORT).show()
             return
         }
-
         auth.signInWithEmailAndPassword(email, password)
             .addOnSuccessListener { goToHome() }
             .addOnFailureListener {
-                Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, it.message ?: "Login Gagal", Toast.LENGTH_SHORT).show()
             }
     }
 
     private fun signInWithGoogle() {
-        // ✅ SEKARANG TIDAK ERROR
         googleLauncher.launch(googleClient.signInIntent)
     }
 
     private fun goToHome() {
-        // Set UserSession dengan user ID dari Firebase Auth
         val currentUser = auth.currentUser
         UserSession.userId = currentUser?.uid
-        
-        Log.d("LoginActivity", "User logged in successfully")
         Log.d("LoginActivity", "User ID: ${UserSession.userId}")
-        Log.d("LoginActivity", "User Email: ${currentUser?.email}")
-        
+
         startActivity(Intent(this, HomeActivity::class.java))
         finish()
     }

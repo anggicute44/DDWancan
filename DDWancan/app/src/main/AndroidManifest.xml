@@ -62,6 +62,20 @@
         <activity android:name=".view.activity.SearchActivity" />
         <activity android:name=".view.activity.FavoriteActivity" />
 
+        <activity
+            android:name=".view.activity.AdminDashboardActivity"
+            android:label="Admin Dashboard" />
+
+        <activity
+            android:name=".view.activity.AdminLoginActivity"
+            android:label="Admin Login" />
+
+        <activity
+            android:name=".view.activity.AdminHomeActivity"
+            android:label="Admin Home" />
+
+
+
     </application>
 
 </manifest>
