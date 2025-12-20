@@ -4,6 +4,9 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,6 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation // Import ini penting
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import id.app.ddwancan.R
@@ -23,16 +27,18 @@ import id.app.ddwancan.R
 fun LoginScreen(
     onEmailLogin: (String, String) -> Unit,
     onGoogleLogin: () -> Unit,
-    onAdminLoginClick: () -> Unit, // 1. Tambahkan callback ini
-    onSignUpClick: () -> Unit = {} // Opsi tambahan untuk register
+    onAdminLoginClick: () -> Unit,
+    onSignUpClick: () -> Unit = {}
 ) {
     val PrimaryBlue = Color(0xFF1976D2)
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
+    // 1. State untuk mengontrol visibilitas password
+    var isPasswordVisible by remember { mutableStateOf(false) }
+
     Scaffold(containerColor = Color.White) { padding ->
-        // Menggunakan Box agar kita bisa menaruh footer di paling bawah jika perlu
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -42,7 +48,6 @@ fun LoginScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 24.dp)
-                    // Agar konten bisa discroll jika layar kecil/landscape
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
@@ -72,7 +77,7 @@ fun LoginScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                // PASSWORD
+                // PASSWORD (DIPERBARUI)
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
@@ -83,7 +88,22 @@ fun LoginScreen(
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                         keyboardType = KeyboardType.Password
                     ),
-                    visualTransformation = PasswordVisualTransformation()
+                    // 2. Logika Visual Transformation
+                    visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    // 3. Menambahkan Ikon Mata (Toggle)
+                    trailingIcon = {
+                        val image = if (isPasswordVisible)
+                            Icons.Filled.Visibility
+                        else
+                            Icons.Filled.VisibilityOff
+
+                        // Deskripsi untuk aksesibilitas
+                        val description = if (isPasswordVisible) "Hide password" else "Show password"
+
+                        IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                            Icon(imageVector = image, contentDescription = description)
+                        }
+                    }
                 )
 
                 Spacer(Modifier.height(24.dp))
@@ -135,7 +155,6 @@ fun LoginScreen(
                         .clickable { onGoogleLogin() },
                     contentAlignment = Alignment.Center
                 ) {
-                    // Sebaiknya ganti dengan Icon Google (R.drawable.ic_google) jika ada
                     Text(
                         "G",
                         fontSize = 32.sp,
@@ -160,7 +179,7 @@ fun LoginScreen(
 
                 Spacer(Modifier.height(24.dp))
 
-                // --- 2. FITUR LOGIN AS ADMIN ---
+                // LOGIN AS ADMIN
                 TextButton(
                     onClick = onAdminLoginClick
                 ) {

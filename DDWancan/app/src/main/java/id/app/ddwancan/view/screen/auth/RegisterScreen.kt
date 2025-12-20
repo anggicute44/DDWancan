@@ -7,6 +7,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation // Jangan lupa import ini
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import id.app.ddwancan.R
@@ -31,6 +35,9 @@ fun RegisterScreen(
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    // 1. State untuk visibilitas password
+    var isPasswordVisible by remember { mutableStateOf(false) }
 
     Scaffold(containerColor = Color.White) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -86,7 +93,7 @@ fun RegisterScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                // INPUT PASSWORD
+                // INPUT PASSWORD (DIPERBARUI)
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
@@ -95,7 +102,21 @@ fun RegisterScreen(
                     shape = RoundedCornerShape(8.dp),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    visualTransformation = PasswordVisualTransformation()
+                    // 2. Ubah transformasi visual berdasarkan state
+                    visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    // 3. Tambahkan ikon mata di sebelah kanan
+                    trailingIcon = {
+                        val image = if (isPasswordVisible)
+                            Icons.Filled.Visibility
+                        else
+                            Icons.Filled.VisibilityOff
+
+                        val description = if (isPasswordVisible) "Hide password" else "Show password"
+
+                        IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                            Icon(imageVector = image, contentDescription = description)
+                        }
+                    }
                 )
 
                 Spacer(Modifier.height(24.dp))
