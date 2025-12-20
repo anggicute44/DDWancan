@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "id.app.ddwancan"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "id.app.ddwancan"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -81,7 +81,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
 
     // --- IMAGE LOADING (Coil for Compose) ---
-    implementation("io.coil-kt:coil-compose:2.6.0") // Versi terbaru
+    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation(libs.androidx.compose.foundation) // Versi terbaru
 
     // --- TESTING & DEBUGGING ---
     testImplementation("junit:junit:4.13.2")

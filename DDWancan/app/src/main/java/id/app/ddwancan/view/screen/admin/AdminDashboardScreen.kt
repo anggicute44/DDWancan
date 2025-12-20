@@ -32,10 +32,7 @@ fun AdminDashboardScreen(
 ) {
     // Daftar Menu Dashboard
     val menuItems = listOf(
-        AdminMenuItem("Kelola User", Icons.Default.Person, "manage_users"),
-        AdminMenuItem("Laporan Keuangan", Icons.Default.DateRange, "finance_report"),
-        AdminMenuItem("Audit Log", Icons.Default.List, "audit_log"),
-        AdminMenuItem("Pengaturan", Icons.Default.Settings, "settings")
+        AdminMenuItem("Kelola User", Icons.Default.Person, "manage_users")
     )
 
     Scaffold(

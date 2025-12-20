@@ -1,6 +1,5 @@
 package id.app.ddwancan.view.activity
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -15,20 +14,9 @@ class EditProfileActivity : ComponentActivity() {
         setContent {
             DDwancanTheme {
                 EditProfileScreen(
-                    onSaveClick = { updatedName, updatedEmail, updatedPassword ->
-                        // Kirim data yang sudah diubah kembali ke ProfileActivity
-                        val resultIntent = Intent()
-                        resultIntent.putExtra("name", updatedName)
-                        resultIntent.putExtra("email", updatedEmail)
-                        resultIntent.putExtra("password", updatedPassword)
-                        setResult(Activity.RESULT_OK, resultIntent)
+                    onBackClick = {
                         finish()
                     },
-                    onCancelClick = {
-                        // Jika batal, kembali tanpa menyimpan
-                        setResult(Activity.RESULT_CANCELED)
-                        finish()
-                    }
                 )
             }
         }

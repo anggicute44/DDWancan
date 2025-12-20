@@ -1,16 +1,19 @@
 package id.app.ddwancan.view.screen.profile
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Person
@@ -23,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -32,8 +36,10 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import id.app.ddwancan.R
 import id.app.ddwancan.ui.theme.PrimaryBlue
+import id.app.ddwancan.viewmodel.ProfileViewModel
 
 /* ============================================================
    MAIN EDIT PROFILE SCREEN
@@ -41,32 +47,48 @@ import id.app.ddwancan.ui.theme.PrimaryBlue
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(
-    onSaveClick: (String, String, String) -> Unit = { _, _, _ -> },
-    onCancelClick: () -> Unit = {}
+    onBackClick: () -> Unit,
+    viewModel: ProfileViewModel = viewModel()
+    // Parameter onLogoutClick dihapus
 ) {
-    // State untuk menyimpan nilai input yang berubah
-    var name by remember { mutableStateOf("71220197_GianP") }
-    var email by remember { mutableStateOf("GianP@students.ukdw.ac.id") }
-    var password by remember { mutableStateOf("password123") }
+    val context = LocalContext.current
+
+    // Mengambil data dari ViewModel
+    val nameState = viewModel.name
+    val emailState = viewModel.email
+    val loading = viewModel.isLoading.value
+
+    // Password tetap kosong karena alasan keamanan (user isi jika ingin ubah)
+    var password by remember { mutableStateOf("") }
 
     Scaffold(
-        topBar = { EditProfileTopBar() },
-        bottomBar = { ProfileBottomBar() },
+        topBar = { EditProfileTopBar(onBackClick) },
         containerColor = Color.White
     ) { innerPadding ->
-        EditProfileContent(
-            modifier = Modifier.padding(innerPadding),
-            name = name,
-            onNameChange = { name = it },
-            email = email,
-            onEmailChange = { email = it },
-            password = password,
-            onPasswordChange = { password = it },
-            onSaveClick = {
-                onSaveClick(name, email, password)
-            },
-            onCancelClick = onCancelClick
-        )
+        if (loading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = PrimaryBlue)
+            }
+        } else {
+            EditProfileContent(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState()), // Agar bisa discroll
+                name = nameState.value,
+                onNameChange = { nameState.value = it },
+                email = emailState.value, // Email biasanya read-only, tapi di sini editable
+                onEmailChange = { emailState.value = it },
+                password = password,
+                onPasswordChange = { password = it },
+                onSaveClick = {
+                    viewModel.updateProfile(nameState.value) { success ->
+                        if (success) Toast.makeText(context, "Profil Diupdate", Toast.LENGTH_SHORT).show()
+                        else Toast.makeText(context, "Gagal Update", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onCancelClick = onBackClick
+            )
+        }
     }
 }
 
@@ -75,11 +97,15 @@ fun EditProfileScreen(
 ============================================================ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditProfileTopBar() {
+fun EditProfileTopBar(onBackClick: () -> Unit) {
     CenterAlignedTopAppBar(
         navigationIcon = {
-            IconButton(onClick = { /* TODO: Handle Back navigation */ }) {
-                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+            IconButton(onClick = onBackClick) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.White
+                )
             }
         },
         title = {
@@ -120,11 +146,12 @@ fun EditProfileContent(
 
         Spacer(Modifier.height(30.dp))
 
-        ProfileAvatarSection()
+        // Avatar Section
+        ProfileAvatarSection(userName = name)
 
         Spacer(Modifier.height(40.dp))
 
-        // Input Name - EDITABLE
+        // Input Name
         ProfileInputRow(
             label = "Name :",
             value = name,
@@ -134,7 +161,7 @@ fun EditProfileContent(
 
         Spacer(Modifier.height(24.dp))
 
-        // Input Email - EDITABLE
+        // Input Email
         ProfileInputRow(
             label = "Email :",
             value = email,
@@ -145,19 +172,20 @@ fun EditProfileContent(
 
         Spacer(Modifier.height(24.dp))
 
-        // Input Confirm Password - EDITABLE
+        // Input Password
         ProfileInputRow(
-            label = "Confirm Password :",
+            label = "Change Password (Optional) :",
             value = password,
             onValueChange = onPasswordChange,
             icon = Icons.Outlined.Lock,
             keyboardType = KeyboardType.Password,
-            visualTransformation = PasswordVisualTransformation()
+            visualTransformation = PasswordVisualTransformation(),
+            placeholder = "******"
         )
 
-        Spacer(Modifier.height(50.dp))
+        Spacer(Modifier.height(40.dp))
 
-        // Action Buttons
+        // Action Buttons (Logout removed from here)
         ActionButtons(
             onSimpanClick = onSaveClick,
             onBatalClick = onCancelClick
@@ -171,14 +199,24 @@ fun EditProfileContent(
    AVATAR SECTION
 ============================================================ */
 @Composable
-fun ProfileAvatarSection() {
+fun ProfileAvatarSection(userName: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        ProfileAvatar()
+        // Ganti R.drawable.ic_launcher_foreground dengan gambar profil default/user
+        Image(
+            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+            contentDescription = "Profile Pic",
+            modifier = Modifier
+                .size(100.dp)
+                .clip(CircleShape)
+                .background(Color.LightGray)
+                .border(1.dp, Color.Gray, CircleShape),
+            contentScale = ContentScale.Crop
+        )
 
         Spacer(Modifier.height(12.dp))
 
         Text(
-            text = "@71220917_GianP",
+            text = userName.ifEmpty { "User" },
             fontWeight = FontWeight.SemiBold,
             fontSize = 16.sp,
             color = Color.Black
@@ -197,7 +235,7 @@ fun ProfileAvatarSection() {
 }
 
 /* ============================================================
-   CUSTOM INPUT ROW - EDITABLE
+   CUSTOM INPUT ROW
 ============================================================ */
 @Composable
 fun ProfileInputRow(
@@ -206,7 +244,8 @@ fun ProfileInputRow(
     onValueChange: (String) -> Unit,
     icon: ImageVector,
     keyboardType: KeyboardType = KeyboardType.Text,
-    visualTransformation: VisualTransformation = VisualTransformation.None
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    placeholder: String = ""
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -231,20 +270,24 @@ fun ProfileInputRow(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // TextField - bisa di-edit
-                BasicTextField(
-                    value = value,
-                    onValueChange = onValueChange,
-                    textStyle = TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black
-                    ),
-                    keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-                    visualTransformation = visualTransformation,
-                    cursorBrush = SolidColor(PrimaryBlue),
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Box {
+                    if (value.isEmpty() && placeholder.isNotEmpty()) {
+                        Text(text = placeholder, color = Color.LightGray, fontSize = 16.sp)
+                    }
+                    BasicTextField(
+                        value = value,
+                        onValueChange = onValueChange,
+                        textStyle = TextStyle(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black
+                        ),
+                        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+                        visualTransformation = visualTransformation,
+                        cursorBrush = SolidColor(PrimaryBlue),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
 
@@ -258,12 +301,12 @@ fun ProfileInputRow(
 }
 
 /* ============================================================
-   ACTION BUTTONS (SIMPAN & BATAL)
+   ACTION BUTTONS (Hanya Simpan & Batal)
 ============================================================ */
 @Composable
 fun ActionButtons(
-    onSimpanClick: () -> Unit = {},
-    onBatalClick: () -> Unit = {}
+    onSimpanClick: () -> Unit,
+    onBatalClick: () -> Unit
 ) {
     val buttonModifier = Modifier
         .fillMaxWidth()
@@ -280,12 +323,7 @@ fun ActionButtons(
             modifier = buttonModifier,
             shape = RoundedCornerShape(8.dp)
         ) {
-            Text(
-                "SIMPAN",
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
-                color = Color.White
-            )
+            Text("SIMPAN", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.White)
         }
 
         // Tombol BATAL
@@ -295,12 +333,7 @@ fun ActionButtons(
             modifier = buttonModifier,
             shape = RoundedCornerShape(8.dp),
         ) {
-            Text(
-                "BATAL",
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
+            Text("BATAL", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.Gray)
         }
     }
 }

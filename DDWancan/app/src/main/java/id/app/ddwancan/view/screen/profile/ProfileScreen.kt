@@ -1,12 +1,17 @@
 package id.app.ddwancan.view.screen.profile
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Person
@@ -22,30 +27,56 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import id.app.ddwancan.R
 import id.app.ddwancan.ui.theme.PrimaryBlue
+import id.app.ddwancan.viewmodel.ProfileViewModel
 
 /* ============================================================
    MAIN PROFILE SCREEN
 ============================================================ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(onEditClick: () -> Unit = {}) {
-    // State untuk menyimpan data profile
-    var name by remember { mutableStateOf("71220197_GianP") }
-    var email by remember { mutableStateOf("GianP@students.ukdw.ac.id") }
+fun ProfileScreen(
+    onEditClick: () -> Unit,
+    onNavigateToLogin: () -> Unit, // Callback untuk kembali ke Login
+    viewModel: ProfileViewModel = viewModel() // Inject ViewModel
+) {
+    // Mengambil data dari ViewModel (Realtime / dari Firestore)
+    val nameState = viewModel.name.value
+    val emailState = viewModel.email.value
+    val isLoading = viewModel.isLoading.value
 
     Scaffold(
         topBar = { ProfileTopBar() },
         bottomBar = { ProfileBottomBar() },
         containerColor = Color.White
     ) { innerPadding ->
-        ProfileContent(
-            modifier = Modifier.padding(innerPadding),
-            name = name,
-            email = email,
-            onEditClick = onEditClick
-        )
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = PrimaryBlue)
+            }
+        } else {
+            ProfileContent(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState()),
+                name = nameState,
+                email = emailState,
+                onEditClick = onEditClick,
+                onLogoutClick = {
+                    // Panggil fungsi logout di ViewModel
+                    viewModel.logout {
+                        onNavigateToLogin()
+                    }
+                }
+            )
+        }
     }
 }
 
@@ -57,9 +88,8 @@ fun ProfileScreen(onEditClick: () -> Unit = {}) {
 fun ProfileTopBar() {
     CenterAlignedTopAppBar(
         navigationIcon = {
-            IconButton(onClick = { /* TODO */ }) {
-                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
-            }
+            // Biasanya di halaman utama profil (Home) tidak ada tombol back
+            // Tapi jika ini submenu, biarkan ada.
         },
         title = {
             Text(
@@ -70,7 +100,8 @@ fun ProfileTopBar() {
             )
         },
         actions = {
-            IconButton(onClick = { /* TODO */ }) {
+            // Opsional: Ikon Settings
+            IconButton(onClick = { /* TODO: Settings */ }) {
                 Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Color.White)
             }
         },
@@ -88,7 +119,8 @@ fun ProfileContent(
     modifier: Modifier = Modifier,
     name: String,
     email: String,
-    onEditClick: () -> Unit
+    onEditClick: () -> Unit,
+    onLogoutClick: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -103,9 +135,9 @@ fun ProfileContent(
 
         Spacer(Modifier.height(16.dp))
 
-        // Username Handle
+        // Username Handle (Bisa diambil dari nama atau field username khusus)
         Text(
-            text = "@71220917_GianP",
+            text = if (name.isNotEmpty()) "@${name.replace(" ", "").lowercase()}" else "@user",
             fontWeight = FontWeight.SemiBold,
             fontSize = 16.sp,
             color = Color.Black
@@ -116,7 +148,7 @@ fun ProfileContent(
         // Input Name - Display Only
         ProfileInputRowDisplay(
             label = "Name :",
-            value = name,
+            value = name.ifEmpty { "Loading..." },
             icon = Icons.Outlined.Person
         )
 
@@ -125,13 +157,21 @@ fun ProfileContent(
         // Input Email - Display Only
         ProfileInputRowDisplay(
             label = "Email :",
-            value = email,
+            value = email.ifEmpty { "Loading..." },
             icon = Icons.Outlined.Email
         )
 
         Spacer(Modifier.height(50.dp))
 
+        // Tombol Edit
         EditProfileButton(onEditClick = onEditClick)
+
+        Spacer(Modifier.height(16.dp))
+
+        // Tombol Logout
+        LogoutButton(onLogoutClick = onLogoutClick)
+
+        Spacer(Modifier.height(30.dp))
     }
 }
 
@@ -167,7 +207,6 @@ fun ProfileInputRowDisplay(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // Hanya menampilkan teks (bukan TextField)
                 Text(
                     text = value,
                     fontSize = 16.sp,
@@ -207,20 +246,22 @@ fun ProfileAvatar() {
                 .border(borderWidth, borderColor, CircleShape)
                 .padding(borderWidth)
         ) {
+            // Gunakan gambar default android jika gambar user belum diset
             Image(
-                painter = painterResource(R.drawable.profilefoto),
+                painter = painterResource(R.drawable.ic_launcher_foreground), // Ganti dengan R.drawable.profilefoto jika ada
                 contentDescription = "Profile Photo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(CircleShape)
+                    .background(Color.LightGray) // Background jika transparan
             )
         }
     }
 }
 
 /* ============================================================
-   EDIT PROFILE BUTTON
+   BUTTONS
 ============================================================ */
 @Composable
 fun EditProfileButton(onEditClick: () -> Unit) {
@@ -228,7 +269,6 @@ fun EditProfileButton(onEditClick: () -> Unit) {
         onClick = onEditClick,
         colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
         modifier = Modifier
-            .padding(horizontal = 20.dp)
             .fillMaxWidth()
             .height(50.dp),
         shape = RoundedCornerShape(8.dp)
@@ -238,6 +278,34 @@ fun EditProfileButton(onEditClick: () -> Unit) {
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
             color = Color.White
+        )
+    }
+}
+
+@Composable
+fun LogoutButton(onLogoutClick: () -> Unit) {
+    OutlinedButton(
+        onClick = onLogoutClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, Color.Red),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = Color.Red,
+            containerColor = Color.White
+        )
+    ) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.Logout,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "LOG OUT",
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp
         )
     }
 }

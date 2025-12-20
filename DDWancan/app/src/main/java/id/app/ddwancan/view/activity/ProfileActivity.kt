@@ -17,25 +17,18 @@ class ProfileActivity : ComponentActivity() {
                     onEditClick = {
                         // Navigasi ke EditProfileActivity
                         val intent = Intent(this@ProfileActivity, EditProfileActivity::class.java)
-                        startActivityForResult(intent, REQUEST_CODE_EDIT_PROFILE)
+                        startActivity(intent)
+                    },
+                    // 👇 TAMBAHKAN BAGIAN INI (Callback untuk Logout)
+                    onNavigateToLogin = {
+                        val intent = Intent(this@ProfileActivity, LoginActivity::class.java)
+                        // Flag ini penting: Menghapus history agar user tidak bisa tekan 'Back' ke profil
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        finish()
                     }
                 )
             }
         }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (requestCode == REQUEST_CODE_EDIT_PROFILE && resultCode == RESULT_OK && data != null) {
-            // Refresh ProfileScreen dengan data terbaru
-            val intent = Intent(this, ProfileActivity::class.java)
-            startActivity(intent)
-            finish()
-        }
-    }
-
-    companion object {
-        const val REQUEST_CODE_EDIT_PROFILE = 1001
     }
 }

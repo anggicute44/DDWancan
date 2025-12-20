@@ -32,16 +32,6 @@ class AdminDashboardActivity : ComponentActivity() {
             "manage_users" -> {
                 startActivity(Intent(this, ManageUsersActivity::class.java))
             }
-            "finance_report" -> {
-                Toast.makeText(this, "Buka Laporan Keuangan", Toast.LENGTH_SHORT).show()
-                // Contoh: startActivity(Intent(this, FinanceReportActivity::class.java))
-            }
-            "audit_log" -> {
-                Toast.makeText(this, "Buka Audit Log", Toast.LENGTH_SHORT).show()
-            }
-            "settings" -> {
-                Toast.makeText(this, "Buka Pengaturan", Toast.LENGTH_SHORT).show()
-            }
         }
     }
 
