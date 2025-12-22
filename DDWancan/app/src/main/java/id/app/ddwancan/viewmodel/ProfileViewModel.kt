@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import id.app.ddwancan.data.utils.UserSession
 
 class ProfileViewModel : ViewModel() {
@@ -20,28 +21,36 @@ class ProfileViewModel : ViewModel() {
     init {
         loadUserProfile()
     }
+    private var userListener: ListenerRegistration? = null
 
     private fun loadUserProfile() {
         val uid = auth.currentUser?.uid ?: UserSession.userId
 
+        // remove any previous listener
+        userListener?.remove()
+
         if (uid != null) {
             isLoading.value = true
-            db.collection("User").document(uid).get()
-                .addOnSuccessListener { document ->
-                    if (document.exists()) {
+            userListener = db.collection("User").document(uid)
+                .addSnapshotListener { document, error ->
+                    isLoading.value = false
+                    if (error != null) {
+                        Log.e("ProfileViewModel", "Listener error", error)
+                        return@addSnapshotListener
+                    }
+                    if (document != null && document.exists()) {
                         name.value = document.getString("name") ?: ""
                         email.value = document.getString("email") ?: ""
                         val av = document.getLong("avatar")
                         avatar.value = av?.toInt() ?: 0
-                        // Catatan: Password tidak bisa diambil dari Firebase Auth demi keamanan
                     }
-                    isLoading.value = false
-                }
-                .addOnFailureListener {
-                    Log.e("ProfileViewModel", "Gagal ambil data", it)
-                    isLoading.value = false
                 }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        userListener?.remove()
     }
 
     fun updateProfile(

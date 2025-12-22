@@ -11,9 +11,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.firestore.FirebaseFirestore
 import id.app.ddwancan.data.model.Comment
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -47,36 +49,51 @@ fun CommentItem(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Profile Avatar (uses avatar index if present)
-                val ctx = androidx.compose.ui.platform.LocalContext.current
-                val avIndex = comment.avatar
-                val resId = ctx.resources.getIdentifier("avatar$avIndex", "drawable", ctx.packageName)
-                if (resId != 0) {
-                    androidx.compose.foundation.Image(
-                        painter = androidx.compose.ui.res.painterResource(id = resId),
-                        contentDescription = null,
-                        modifier = Modifier.size(36.dp),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = Color.Gray
-                    )
-                }
+                    // Profile Avatar & Name: load live from User document so updates reflect immediately
+                    val ctx = LocalContext.current
+                    var userName by remember { mutableStateOf<String?>(null) }
+                    var userAvatar by remember { mutableStateOf(0) }
+
+                    DisposableEffect(key1 = comment.id_user) {
+                        val db = FirebaseFirestore.getInstance()
+                        val listener = db.collection("User").document(comment.id_user)
+                            .addSnapshotListener { doc, e ->
+                                if (doc != null && doc.exists()) {
+                                    userName = doc.getString("name") ?: ""
+                                    userAvatar = doc.getLong("avatar")?.toInt() ?: 0
+                                } else {
+                                    userName = null
+                                    userAvatar = 0
+                                }
+                            }
+                        onDispose { listener.remove() }
+                    }
+
+                    // render avatar image using user's current avatar index
+                    val resId = ctx.resources.getIdentifier("avatar${userAvatar}", "drawable", ctx.packageName)
+                    if (resId != 0) {
+                        androidx.compose.foundation.Image(
+                            painter = androidx.compose.ui.res.painterResource(id = resId),
+                            contentDescription = null,
+                            modifier = Modifier.size(36.dp),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            tint = Color.Gray
+                        )
+                    }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 // Info User & Waktu
                 Column(modifier = Modifier.weight(1f)) {
-                    // Tampilkan nama user jika tersedia, jika tidak tampilkan potongan UID
-                    val displayName = when {
-                        comment.nama_user.isNotBlank() -> comment.nama_user
-                        comment.id_user.isNotBlank() -> "User: ${comment.id_user.take(6)}..."
-                        else -> "Anonymous"
-                    }
+                    // Tampilkan nama user dari dokumen User jika tersedia, fallback ke UID
+                    val displayName = userName?.takeIf { it.isNotBlank() }
+                        ?: if (comment.id_user.isNotBlank()) "User: ${comment.id_user.take(6)}..." else "Anonymous"
 
                     Text(
                         text = displayName,

@@ -60,43 +60,28 @@ class CommentViewModel : ViewModel() {
             return
         }
 
-        // Ambil nama user dulu
-        db.collection("User").document(userId).get()
-            .addOnSuccessListener { documentSnapshot ->
-                var userName = "Unknown User"
-                var userAvatar = 0
-                if (documentSnapshot.exists()) {
-                    userName = documentSnapshot.getString("name") ?: "Unknown"
-                    userAvatar = documentSnapshot.getLong("avatar")?.toInt() ?: 0
-                }
+        // DATA YANG DISIMPAN (FLAT)
+        // Only store minimal comment info; user data (name/avatar) will be loaded live when rendering comments.
+        val commentData = hashMapOf(
+            "id_user" to userId,
+            "komentar" to message,
+            "waktu" to FieldValue.serverTimestamp(),
 
-                // DATA YANG DISIMPAN (FLAT)
-                val commentData = hashMapOf(
-                    "id_user" to userId,
-                    "nama_user" to userName,
-                    "komentar" to message,
-                    "avatar" to userAvatar,
-                    "waktu" to FieldValue.serverTimestamp(),
+            // Kita simpan ID Berita di dalam dokumen komentar
+            "article_url" to articleUrl,
+            "source_id" to sourceId,
+            "warningTotal" to 0,
+            "status" to "ok"
+        )
 
-                    // Kita simpan ID Berita di dalam dokumen komentar
-                    "article_url" to articleUrl,
-                    "source_id" to sourceId,
-                    "warningTotal" to 0,
-                    "status" to "ok"
-                )
-
-                // Simpan langsung ke root collection "Comment"
-                db.collection("Comment")
-                    .add(commentData)
-                    .addOnSuccessListener {
-                        onDone()
-                    }
-                    .addOnFailureListener { e ->
-                        _error.value = e.localizedMessage
-                    }
+        // Simpan langsung ke root collection "Comment"
+        db.collection("Comment")
+            .add(commentData)
+            .addOnSuccessListener {
+                onDone()
             }
-            .addOnFailureListener {
-                _error.value = "Gagal ambil user"
+            .addOnFailureListener { e ->
+                _error.value = e.localizedMessage
             }
     }
 

@@ -66,6 +66,10 @@ fun EditProfileScreen(
     var confirmPassword by remember { mutableStateOf("") }
     // Selected avatar index (0..7) initialized from ViewModel
     var selectedAvatar by remember { mutableStateOf(viewModel.avatar.value) }
+    // Keep selectedAvatar in sync if ViewModel avatar updates
+    LaunchedEffect(key1 = viewModel.avatar.value) {
+        selectedAvatar = viewModel.avatar.value
+    }
 
     Scaffold(
         topBar = { EditProfileTopBar(onBackClick) },
