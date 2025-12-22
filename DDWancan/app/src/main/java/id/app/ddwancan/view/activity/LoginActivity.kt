@@ -12,6 +12,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 import id.app.ddwancan.R
 import id.app.ddwancan.data.utils.UserSession
 import id.app.ddwancan.ui.theme.DDwancanTheme
@@ -30,7 +32,12 @@ class LoginActivity : ComponentActivity() {
             val account = task.result
             val credential = GoogleAuthProvider.getCredential(account.idToken, null)
             auth.signInWithCredential(credential)
-                .addOnSuccessListener { goToHome() }
+                .addOnSuccessListener {
+                    // Sinkronkan user ke Firestore lalu lanjut
+                    syncUserToFirestoreAndProceed {
+                        goToHome()
+                    }
+                }
                 .addOnFailureListener {
                     Toast.makeText(this, "Login Google gagal", Toast.LENGTH_SHORT).show()
                 }
@@ -73,13 +80,20 @@ class LoginActivity : ComponentActivity() {
         }
     }
 
+    private val db = FirebaseFirestore.getInstance()
+
     private fun loginWithEmail(email: String, password: String) {
         if (email.isBlank() || password.isBlank()) {
             Toast.makeText(this, "Email & Password wajib diisi", Toast.LENGTH_SHORT).show()
             return
         }
         auth.signInWithEmailAndPassword(email, password)
-            .addOnSuccessListener { goToHome() }
+            .addOnSuccessListener { authResult ->
+                // Sinkronkan user ke Firestore lalu lanjut ke Home
+                syncUserToFirestoreAndProceed {
+                    goToHome()
+                }
+            }
             .addOnFailureListener {
                 Toast.makeText(this, it.message ?: "Login Gagal", Toast.LENGTH_SHORT).show()
             }
@@ -96,5 +110,64 @@ class LoginActivity : ComponentActivity() {
 
         startActivity(Intent(this, HomeActivity::class.java))
         finish()
+    }
+
+    /**
+     * Pastikan dokumen user ada di koleksi `User` Firestore.
+     * Jika belum ada, buat dokumen dengan informasi dasar dari FirebaseAuth.
+     * Jika sudah ada, update nama/photo jika kosong.
+     * Panggil `onDone` setelah operasi selesai (baik berhasil maupun gagal).
+     */
+    private fun syncUserToFirestoreAndProceed(onDone: () -> Unit) {
+        val firebaseUser = auth.currentUser
+        if (firebaseUser == null) {
+            onDone()
+            return
+        }
+
+        val uid = firebaseUser.uid
+        val displayName = firebaseUser.displayName ?: ""
+        val email = firebaseUser.email ?: ""
+        val photoUrl = firebaseUser.photoUrl?.toString() ?: ""
+
+        val userRef = db.collection("User").document(uid)
+        userRef.get()
+            .addOnSuccessListener { doc ->
+                if (!doc.exists()) {
+                    // Buat dokumen baru
+                    val data = hashMapOf(
+                        "uid" to uid,
+                        "name" to (if (displayName.isNotBlank()) displayName else email.substringBefore('@')),
+                        "email" to email,
+                        "photoUrl" to photoUrl,
+                        "role" to "user",
+                        "createdAt" to FieldValue.serverTimestamp()
+                    )
+                    userRef.set(data)
+                        .addOnCompleteListener { onDone() }
+                        .addOnFailureListener { onDone() }
+                } else {
+                    // Update nama/photo jika kosong
+                    val updates = hashMapOf<String, Any>()
+                    if ((doc.getString("name") ?: "").isBlank()) {
+                        updates["name"] = if (displayName.isNotBlank()) displayName else email.substringBefore('@')
+                    }
+                    if ((doc.getString("photoUrl") ?: "").isBlank() && photoUrl.isNotBlank()) {
+                        updates["photoUrl"] = photoUrl
+                    }
+
+                    if (updates.isNotEmpty()) {
+                        userRef.update(updates)
+                            .addOnCompleteListener { onDone() }
+                            .addOnFailureListener { onDone() }
+                    } else {
+                        onDone()
+                    }
+                }
+            }
+            .addOnFailureListener {
+                // Jika gagal membaca, lanjut saja
+                onDone()
+            }
     }
 }

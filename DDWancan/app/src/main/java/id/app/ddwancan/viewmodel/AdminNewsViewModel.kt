@@ -19,18 +19,61 @@ class AdminNewsViewModel : ViewModel() {
     val isLoading = mutableStateOf(false)
     val status = mutableStateOf("")
 
-    fun updateNews(apiKey: String) {
-        if (apiKey.isBlank()) {
-            status.value = "39b789cf17324dc9bc343edb18ab7e24"
-            return
-        }
+    // Default API key (used when admin doesn't input one)
+    private val DEFAULT_API_KEY = "39b789cf17324dc9bc343edb18ab7e24"
+
+    // Preset queries available for admin
+    enum class Preset(val label: String) {
+        EVERYTHING_APPLE("Everything: q=apple, from=2025-12-21, to=2025-12-21, sortBy=popularity"),
+        EVERYTHING_TESLA("Everything: q=tesla, from=2025-11-22, sortBy=publishedAt"),
+        TOP_HEADLINES_US_BUSINESS("Top Headlines: country=us, category=business"),
+        TOP_HEADLINES_TECHCRUNCH("Top Headlines: sources=techcrunch"),
+        EVERYTHING_WSJ("Everything: domains=wsj.com")
+    }
+
+    /**
+     * Update news using a preset. Admin selects which preset to run.
+     * Uses DEFAULT_API_KEY when not specified by presets.
+     */
+    fun updateNewsWithPreset(preset: Preset) {
+        val apiKey = DEFAULT_API_KEY
 
         isLoading.value = true
-        status.value = "Memulai sinkronisasi..."
+        status.value = "Memulai sinkronisasi (${preset.name})..."
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val response = RetrofitClient.apiService.getTopHeadlines(category = null, apiKey = apiKey)
+                val response = when (preset) {
+                    Preset.EVERYTHING_APPLE -> RetrofitClient.apiService.getEverything(
+                        q = "apple",
+                        from = "2025-12-21",
+                        to = "2025-12-21",
+                        sortBy = "popularity",
+                        apiKey = apiKey
+                    )
+                    Preset.EVERYTHING_TESLA -> RetrofitClient.apiService.getEverything(
+                        q = "tesla",
+                        from = "2025-11-22",
+                        sortBy = "publishedAt",
+                        apiKey = apiKey
+                    )
+                    Preset.TOP_HEADLINES_US_BUSINESS -> RetrofitClient.apiService.getTopHeadlines(
+                        country = "us",
+                        category = "business",
+                        apiKey = apiKey
+                    )
+                    Preset.TOP_HEADLINES_TECHCRUNCH -> RetrofitClient.apiService.getTopHeadlines(
+                        sources = "techcrunch",
+                        country = "",
+                        category = "",
+                        apiKey = apiKey
+                    )
+                    Preset.EVERYTHING_WSJ -> RetrofitClient.apiService.getEverything(
+                        domains = "wsj.com",
+                        apiKey = apiKey
+                    )
+                }
+
                 val articles = response.articles
 
                 if (articles.isNullOrEmpty()) {
@@ -46,48 +89,28 @@ class AdminNewsViewModel : ViewModel() {
                 val doneCount = AtomicInteger(0)
 
                 for (article in articles) {
-                    val docId = article.url.hashCode().toString()
-                    val data = hashMapOf<String, Any?>(
-                        "title" to article.title,
-                        "description" to article.description,
-                        "author" to article.author,
-                        "source_id" to article.source?.id,
-                        "source_name" to article.source?.name,
-                        "url" to article.url,
-                        "urlToImage" to article.urlToImage,
-                        "publishedAt" to article.publishedAt,
-                        "importedAt" to FieldValue.serverTimestamp(),
-                        "favoritesCount" to 0,
-                        "favoritedBy" to emptyList<String>()
-                    )
-
-                    db.collection("News").document(docId).set(data, SetOptions.merge())
-                        .addOnSuccessListener {
-                            successCount.incrementAndGet()
-                            if (doneCount.incrementAndGet() == total) {
-                                status.value = "Selesai: ${successCount.get()} disimpan, ${failCount.get()} gagal"
-                                isLoading.value = false
-                            }
+                    try {
+                        saveArticleToFirestore(article)
+                        successCount.incrementAndGet()
+                    } catch (e: Exception) {
+                        failCount.incrementAndGet()
+                    } finally {
+                        if (doneCount.incrementAndGet() == total) {
+                            status.value = "Selesai: ${successCount.get()} disimpan, ${failCount.get()} gagal"
+                            isLoading.value = false
                         }
-                        .addOnFailureListener {
-                            failCount.incrementAndGet()
-                            if (doneCount.incrementAndGet() == total) {
-                                status.value = "Selesai: ${successCount.get()} disimpan, ${failCount.get()} gagal"
-                                isLoading.value = false
-                            }
-                        }
+                    }
                 }
             } catch (e: Exception) {
                 status.value = "Gagal ambil dari API: ${e.message}"
-            } finally {
                 isLoading.value = false
             }
         }
     }
 
     private fun saveArticleToFirestore(article: Article) {
-        // Gunakan hash code URL sebagai ID dokumen yang cukup unik untuk kasus ini
-        val docId = article.url.hashCode().toString()
+        // Gunakan UUID deterministik berdasarkan URL sehingga identik untuk URL sama
+        val docId = java.util.UUID.nameUUIDFromBytes(article.url.toByteArray()).toString()
 
         val data = hashMapOf<String, Any?>(
             "title" to article.title,

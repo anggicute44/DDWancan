@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import id.app.ddwancan.data.utils.UserSession
+import id.app.ddwancan.view.screen.detail.CommentItem
 import id.app.ddwancan.viewmodel.CommentViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,27 +73,25 @@ fun CommentScreen(
                         }
                     }
                 } else {
+                    val uid = UserSession.userId
                     items(commentsList) { comment ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                // --- PERUBAHAN DI SINI ---
-                                // Menampilkan nama_user. Jika kosong (data lama), tampilkan "User"
-                                Text(
-                                    text = if (comment.nama_user.isNotBlank()) comment.nama_user else "User",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = comment.komentar,
-                                    fontSize = 14.sp
-                                )
+                        CommentItem(
+                            comment = comment,
+                            currentUserId = uid,
+                            onReport = { commentId ->
+                                if (uid == null) {
+                                    Toast.makeText(context, "Silakan login untuk melaporkan", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    viewModel.reportComment(
+                                        commentId,
+                                        uid,
+                                        onSuccess = { Toast.makeText(context, "Laporan terkirim", Toast.LENGTH_SHORT).show() },
+                                        onAlreadyReported = { Toast.makeText(context, "Anda sudah melaporkan komentar ini", Toast.LENGTH_SHORT).show() },
+                                        onFailure = { msg -> Toast.makeText(context, "Gagal: $msg", Toast.LENGTH_SHORT).show() }
+                                    )
+                                }
                             }
-                        }
+                        )
                     }
                 }
             }

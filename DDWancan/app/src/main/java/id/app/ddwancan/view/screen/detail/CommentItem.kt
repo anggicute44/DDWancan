@@ -4,9 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,7 +21,9 @@ import java.util.Locale
 fun CommentItem(
     comment: Comment,
     isAdmin: Boolean = false, // Default false jika tidak dikirim
-    onDeleteClick: (String) -> Unit = {}
+    onDeleteClick: (String) -> Unit = {},
+    currentUserId: String? = null,
+    onReport: (String) -> Unit = {}
 ) {
     // Formatter tanggal sederhana
     val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()) }
@@ -56,9 +58,15 @@ fun CommentItem(
 
                 // Info User & Waktu
                 Column(modifier = Modifier.weight(1f)) {
-                    // Menampilkan ID User (atau Nama jika ada di masa depan)
+                    // Tampilkan nama user jika tersedia, jika tidak tampilkan potongan UID
+                    val displayName = when {
+                        comment.nama_user.isNotBlank() -> comment.nama_user
+                        comment.id_user.isNotBlank() -> "User: ${comment.id_user.take(6)}..."
+                        else -> "Anonymous"
+                    }
+
                     Text(
-                        text = if (comment.id_user.isNotBlank()) "User: ${comment.id_user.take(6)}..." else "Anonymous",
+                        text = displayName,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -81,6 +89,35 @@ fun CommentItem(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Hapus Komentar",
                             tint = Color.Red
+                        )
+                    }
+                }
+                // --- TOMBOL REPORT (Hanya untuk user biasa jika komentar masih ok)
+                // Sembunyikan tombol jika komentar milik user saat ini ---
+                if (!isAdmin && comment.status == "ok" && comment.id_user != currentUserId) {
+                    var showReportDialog by remember { mutableStateOf(false) }
+                    if (showReportDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showReportDialog = false },
+                            title = { Text("Lapor Komentar?") },
+                            text = { Text("Apakah Anda yakin ingin melaporkan komentar ini sebagai pelanggaran?") },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    showReportDialog = false
+                                    onReport(comment.id)
+                                }) { Text("Ya") }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showReportDialog = false }) { Text("Batal") }
+                            }
+                        )
+                    }
+
+                    IconButton(onClick = { showReportDialog = true }, modifier = Modifier.size(24.dp)) {
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Default.Warning,
+                            contentDescription = "Report",
+                            tint = Color(0xFFFFA000)
                         )
                     }
                 }

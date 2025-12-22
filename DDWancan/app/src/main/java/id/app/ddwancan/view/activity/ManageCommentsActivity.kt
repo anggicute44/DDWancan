@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -43,19 +44,29 @@ class ManageCommentsActivity : ComponentActivity() {
                 if (showDialog && selectedPath != null) {
                     AlertDialog(
                         onDismissRequest = { showDialog = false },
-                        title = { Text("Hapus Komentar?") },
-                        text = { Text("Tindakan ini tidak dapat dibatalkan.") },
+                        title = { Text("Aksi Komentar") },
+                        text = { Text("Pilih tindakan untuk komentar ini:") },
                         confirmButton = {
                             TextButton(onClick = {
-                                deleteComment(selectedPath!!)
+                                // Set status to "hide"
+                                setCommentStatus(selectedPath!!, "hide")
                                 showDialog = false
                             }) {
-                                Text("Hapus", color = Color.Red)
+                                Text("Hide", color = Color.Black)
                             }
                         },
                         dismissButton = {
-                            TextButton(onClick = { showDialog = false }) {
-                                Text("Batal")
+                            Row {
+                                TextButton(onClick = {
+                                    // Set status to delete
+                                    setCommentStatus(selectedPath!!, "delete")
+                                    showDialog = false
+                                }) {
+                                    Text("Delete", color = Color.Red)
+                                }
+                                TextButton(onClick = { showDialog = false }) {
+                                    Text("Batal")
+                                }
                             }
                         }
                     )
@@ -87,10 +98,29 @@ class ManageCommentsActivity : ComponentActivity() {
     }
 
     private fun deleteComment(docId: String) {
-        // Hapus langsung dari collection "Comment"
+        // deprecated: not used. Use setCommentStatus instead.
         db.collection("Comment").document(docId).delete()
             .addOnSuccessListener {
                 commentsState.removeIf { it.second == docId }
+            }
+    }
+
+    private fun setCommentStatus(docId: String, status: String) {
+        db.collection("Comment").document(docId)
+            .update("status", status)
+            .addOnSuccessListener {
+                // update local state item
+                for (i in commentsState.indices) {
+                    if (commentsState[i].second == docId) {
+                        val (c, path) = commentsState[i]
+                        val newC = c.copy(status = status)
+                        commentsState[i] = Pair(newC, path)
+                        break
+                    }
+                }
+            }
+            .addOnFailureListener {
+                // ignore for now
             }
     }
 }

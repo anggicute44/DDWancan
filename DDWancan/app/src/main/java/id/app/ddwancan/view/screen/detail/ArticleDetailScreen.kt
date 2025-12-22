@@ -38,6 +38,8 @@ fun ArticleDetailScreen(
     content: String,
     imageUrl: String?,
     articleUrl: String,
+    author: String? = null,
+    publishedAt: String? = null,
     onBack: () -> Unit,
     commentViewModel: CommentViewModel = viewModel()
 ) {
@@ -98,6 +100,17 @@ fun ArticleDetailScreen(
                     Spacer(Modifier.height(12.dp))
                 }
                 Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                // Tampilkan author & publishedAt jika ada
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+                    if (!author.isNullOrBlank()) {
+                        Text(text = "By: $author", style = MaterialTheme.typography.bodySmall)
+                        Spacer(Modifier.width(12.dp))
+                    }
+                    if (!publishedAt.isNullOrBlank()) {
+                        Text(text = "Published: ${publishedAt}", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
                 Spacer(Modifier.height(12.dp))
                 Text(text = content, style = MaterialTheme.typography.bodyMedium)
                 Spacer(Modifier.height(24.dp))
@@ -125,7 +138,7 @@ fun ArticleDetailScreen(
                             title = title,
                             description = content,
                             imageUrl = imageUrl,
-                            publishedAt = null
+                            publishedAt = publishedAt
                         )
                     }) {
                         Icon(if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, null,
@@ -168,7 +181,29 @@ fun ArticleDetailScreen(
                 }
             } else {
                 items(comments) { comment ->
-                    CommentItem(comment = comment)
+                    CommentItem(
+                        comment = comment,
+                        currentUserId = currentUserId,
+                        onReport = { commentId ->
+                            if (currentUserId == null) {
+                                Toast.makeText(context, "Silakan login untuk melaporkan", Toast.LENGTH_SHORT).show()
+                            } else {
+                                commentViewModel.reportComment(
+                                    commentId,
+                                    currentUserId,
+                                    onSuccess = {
+                                        Toast.makeText(context, "Terima kasih. Laporan dikirim.", Toast.LENGTH_SHORT).show()
+                                    },
+                                    onAlreadyReported = {
+                                        Toast.makeText(context, "Anda sudah melaporkan komentar ini.", Toast.LENGTH_SHORT).show()
+                                    },
+                                    onFailure = { msg ->
+                                        Toast.makeText(context, "Gagal laporan: $msg", Toast.LENGTH_SHORT).show()
+                                    }
+                                )
+                            }
+                        }
+                    )
                 }
             }
 

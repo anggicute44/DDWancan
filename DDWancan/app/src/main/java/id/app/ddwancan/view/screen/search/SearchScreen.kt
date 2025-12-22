@@ -122,6 +122,8 @@ fun SearchContent(modifier: Modifier = Modifier, viewModel: NewsViewModel = view
                     putExtra("CONTENT", article.description ?: "")
                     putExtra("IMAGE", article.urlToImage)
                     putExtra("URL", article.url)
+                    putExtra("AUTHOR", article.author)
+                    putExtra("PUBLISHED_AT", article.publishedAt)
                 }
                 context.startActivity(intent)
             }
