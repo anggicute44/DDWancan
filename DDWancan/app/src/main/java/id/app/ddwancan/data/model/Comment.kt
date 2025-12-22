@@ -27,9 +27,15 @@ data class Comment(
 
     @get:PropertyName("waktu") @set:PropertyName("waktu")
     var waktu: Timestamp? = null
+,
+    @get:PropertyName("warningTotal") @set:PropertyName("warningTotal")
+    var warningTotal: Int = 0,
+
+    @get:PropertyName("status") @set:PropertyName("status")
+    var status: String = "ok"
 ) {
     // Constructor kosong wajib untuk Firestore deserialization
-    constructor() : this("", "", "", "", "", "", null)
+    constructor() : this("", "", "", "", "", "", null, 0, "ok")
 }
 
 // 👇 CommentRequest ditambahkan di sini

@@ -16,6 +16,8 @@ class ArticleDetailActivity : ComponentActivity() {
         val content = intent.getStringExtra("CONTENT") ?: "Konten tidak tersedia"
         val imageUrl = intent.getStringExtra("IMAGE")
         val articleUrl = intent.getStringExtra("URL") ?: ""
+        val author = intent.getStringExtra("AUTHOR")
+        val publishedAt = intent.getStringExtra("PUBLISHED_AT")
 
         setContent {
             ArticleDetailScreen(
@@ -24,6 +26,8 @@ class ArticleDetailActivity : ComponentActivity() {
                 content = content,
                 imageUrl = imageUrl,
                 articleUrl = articleUrl,
+                author = author,
+                publishedAt = publishedAt,
                 onBack = { finish() }
             )
         }

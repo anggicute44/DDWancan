@@ -40,7 +40,9 @@ class CommentViewModel : ViewModel() {
                 }
                 if (snapshot != null) {
                     val list = snapshot.toObjects(Comment::class.java)
-                    _comments.value = list
+                    // Hanya tampilkan komentar yang statusnya "ok" untuk user biasa
+                    _comments.value = list.filter { it.status == "ok" }
+                        .sortedBy { it.waktu?.toDate()?.time ?: 0L }
                 }
             }
     }
@@ -75,7 +77,9 @@ class CommentViewModel : ViewModel() {
 
                     // Kita simpan ID Berita di dalam dokumen komentar
                     "article_url" to articleUrl,
-                    "source_id" to sourceId
+                    "source_id" to sourceId,
+                    "warningTotal" to 0,
+                    "status" to "ok"
                 )
 
                 // Simpan langsung ke root collection "Comment"
@@ -91,6 +95,69 @@ class CommentViewModel : ViewModel() {
             .addOnFailureListener {
                 _error.value = "Gagal ambil user"
             }
+    }
+
+    // --- 4. REPORT COMMENT ---
+    fun reportComment(
+        commentId: String,
+        reporterId: String,
+        onSuccess: () -> Unit,
+        onAlreadyReported: () -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        // Ambil dokumen komentar dulu untuk memeriksa kepemilikan
+        db.collection("Comment").document(commentId).get()
+            .addOnSuccessListener { doc ->
+                if (!doc.exists()) {
+                    onFailure("Komentar tidak ditemukan")
+                    return@addOnSuccessListener
+                }
+
+                val ownerId = doc.getString("id_user")
+                if (ownerId != null && ownerId == reporterId) {
+                    onFailure("Anda tidak bisa melaporkan komentar sendiri")
+                    return@addOnSuccessListener
+                }
+
+                // Cek apakah reporter sudah pernah report comment ini
+                db.collection("reports")
+                    .whereEqualTo("comment_id", commentId)
+                    .whereEqualTo("reporter_id", reporterId)
+                    .get()
+                    .addOnSuccessListener { result ->
+                        if (!result.isEmpty) {
+                            onAlreadyReported()
+                            return@addOnSuccessListener
+                        }
+
+                        // Tambah dokumen report baru
+                        val reportData = hashMapOf(
+                            "comment_id" to commentId,
+                            "reporter_id" to reporterId,
+                            "waktu" to FieldValue.serverTimestamp()
+                        )
+
+                        db.collection("reports").add(reportData)
+                            .addOnSuccessListener {
+                                // Increment warningTotal pada comment
+                                db.collection("Comment").document(commentId)
+                                    .update("warningTotal", FieldValue.increment(1))
+                                    .addOnSuccessListener { onSuccess() }
+                                    .addOnFailureListener { e -> onFailure(e.localizedMessage ?: "Unknown") }
+                            }
+                            .addOnFailureListener { e -> onFailure(e.localizedMessage ?: "Unknown") }
+                    }
+                    .addOnFailureListener { e -> onFailure(e.localizedMessage ?: "Unknown") }
+            }
+            .addOnFailureListener { e -> onFailure(e.localizedMessage ?: "Unknown") }
+    }
+
+    // --- 5. SET COMMENT STATUS (hide / delete) ---
+    fun setCommentStatus(commentId: String, status: String, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
+        db.collection("Comment").document(commentId)
+            .update("status", status)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { e -> onFailure(e.localizedMessage ?: "Unknown") }
     }
 
     // --- 3. DELETE COMMENT (ADMIN) ---

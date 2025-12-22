@@ -56,11 +56,27 @@ fun ManageCommentsScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(commentList) { (comment, docPath) ->
-                    AdminCommentItem(
-                        comment = comment,
-                        onDelete = { onDeleteClick(docPath) }
-                    )
+                // Group by article_url
+                val grouped = commentList.groupBy { it.first.article_url }
+                grouped.forEach { (articleUrl, listPairs) ->
+                    // Article header
+                    item {
+                        Text(text = "Berita: ${articleUrl.take(50)}", fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(6.dp))
+                    }
+
+                    // Sort comments: status ok first, then warningTotal desc, then waktu desc
+                    val sorted = listPairs.sortedWith(compareBy<Pair<Comment, String>> {
+                        if (it.first.status == "ok") 0 else 1
+                    }.thenByDescending { it.first.warningTotal }
+                        .thenByDescending { it.first.waktu?.toDate()?.time ?: 0L })
+
+                    items(sorted) { (comment, docPath) ->
+                        AdminCommentItem(
+                            comment = comment,
+                            onDelete = { onDeleteClick(docPath) }
+                        )
+                    }
                 }
             }
         }
@@ -108,8 +124,13 @@ fun AdminCommentItem(comment: Comment, onDelete: () -> Unit) {
                     color = Color.Gray
                 )
             }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Hapus", tint = Color.Red)
+            Row {
+                // Show warning count
+                Text(text = "Reports: ${comment.warningTotal}", modifier = Modifier.align(Alignment.CenterVertically))
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = "Hapus", tint = Color.Red)
+                }
             }
         }
     }

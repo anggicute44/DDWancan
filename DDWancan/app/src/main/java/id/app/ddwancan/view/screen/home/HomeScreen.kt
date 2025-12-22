@@ -44,14 +44,69 @@ fun HomeScreen(
     val errorMessage by viewModel.errorMessage
     var selectedCategory by remember { mutableStateOf<String?>(null) }
 
+    // State for filter dialog
+    var showFilterDialog by remember { mutableStateOf(false) }
+    var authorFilter by remember { mutableStateOf("") }
+    var dateFrom by remember { mutableStateOf("") } // format: YYYY-MM-DD
+    var dateTo by remember { mutableStateOf("") }
+
     LaunchedEffect(selectedCategory) {
         viewModel.fetchNews(selectedCategory)
     }
 
+    val filteredList = newsList.filter {
+        (authorFilter.isBlank() || it.author?.contains(authorFilter, ignoreCase = true) == true) &&
+        (dateFrom.isBlank() || it.publishedAt >= dateFrom) &&
+        (dateTo.isBlank() || it.publishedAt <= dateTo)
+    }
+
     Scaffold(
-        topBar = { HomeTopBar() },
+        topBar = { HomeTopBar(onFilterClick = { showFilterDialog = true }) },
         bottomBar = { HomeBottomBar(context) }
     ) { padding ->
+
+        if (showFilterDialog) {
+            AlertDialog(
+                onDismissRequest = { showFilterDialog = false },
+                title = { Text("Filter News") },
+                text = {
+                    Column {
+                        OutlinedTextField(
+                            value = authorFilter,
+                            onValueChange = { authorFilter = it },
+                            label = { Text("Author contains") },
+                            singleLine = true
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = dateFrom,
+                            onValueChange = { dateFrom = it },
+                            label = { Text("Published from (YYYY-MM-DD)") },
+                            singleLine = true
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = dateTo,
+                            onValueChange = { dateTo = it },
+                            label = { Text("Published to (YYYY-MM-DD)") },
+                            singleLine = true
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showFilterDialog = false }) { Text("Apply") }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        authorFilter = ""
+                        dateFrom = ""
+                        dateTo = ""
+                        showFilterDialog = false
+                    }) { Text("Clear") }
+                }
+            )
+        }
+
         when {
             isLoading -> {
                 Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
@@ -77,7 +132,7 @@ fun HomeScreen(
                         Spacer(Modifier.height(24.dp))
                     }
 
-                    items(newsList) { article ->
+                    items(filteredList) { article ->
                         ApiNewsCard(article) {
                             val intent = Intent(context, ArticleDetailActivity::class.java).apply {
                                 putExtra("SOURCE_ID", article.source?.id)
@@ -85,6 +140,8 @@ fun HomeScreen(
                                 putExtra("CONTENT", article.description ?: "")
                                 putExtra("IMAGE", article.urlToImage)
                                 putExtra("URL", article.url)
+                                putExtra("AUTHOR", article.author)
+                                putExtra("PUBLISHED_AT", article.publishedAt)
                             }
                             context.startActivity(intent)
                         }
@@ -101,9 +158,9 @@ fun HomeScreen(
 /* ============================================================
    TOP BAR
 ============================================================ */
-@OptIn(ExperimentalMaterial3Api::class) // Ditambahkan: Untuk CenterAlignedTopAppBar
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeTopBar() {
+fun HomeTopBar(onFilterClick: () -> Unit) {
     CenterAlignedTopAppBar(
         title = {
             Image(
@@ -112,6 +169,11 @@ fun HomeTopBar() {
                 modifier = Modifier.height(48.dp),
                 contentScale = ContentScale.Fit
             )
+        },
+        actions = {
+            IconButton(onClick = onFilterClick) {
+                Icon(imageVector = Icons.Default.Search, contentDescription = "Filter")
+            }
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
             containerColor = Color.White
@@ -130,7 +192,7 @@ fun BreakingNewsImage() {
         contentScale = ContentScale.Crop,
         modifier = Modifier
             .fillMaxWidth()
-            .height(170.dp)
+            .height(200.dp)
             .background(Color.LightGray, RoundedCornerShape(12.dp))
     )
 }
@@ -145,25 +207,19 @@ fun CategoryChips(
 ) {
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
 
-        // PERBAIKAN: Bungkus setiap CategoryChip dengan item { ... }
         item {
             CategoryChip("All", selectedCategory == null) {
                 onCategoryClick(null)
             }
         }
         item {
-            CategoryChip("Technology", selectedCategory == "technology") {
-                onCategoryClick("technology")
+            CategoryChip("Apple", selectedCategory == "apple") {
+                onCategoryClick("apple")
             }
         }
         item {
-            CategoryChip("Health", selectedCategory == "health") {
-                onCategoryClick("health")
-            }
-        }
-        item {
-            CategoryChip("Sports", selectedCategory == "sports") {
-                onCategoryClick("sports")
+            CategoryChip("Tesla", selectedCategory == "tesla") {
+                onCategoryClick("tesla")
             }
         }
         item {
@@ -172,8 +228,13 @@ fun CategoryChips(
             }
         }
         item {
-            CategoryChip("Science", selectedCategory == "science") {
-                onCategoryClick("science")
+            CategoryChip("TechCrunch", selectedCategory == "techcrunch") {
+                onCategoryClick("techcrunch")
+            }
+        }
+        item {
+            CategoryChip("Wall Street", selectedCategory == "wall street") {
+                onCategoryClick("wall street")
             }
         }
     }
@@ -214,7 +275,8 @@ fun ApiNewsCard(
             .padding(vertical = 6.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        shadowElevation = 4.dp
+        shadowElevation = 4.dp,
+        color = Color.White
     ) {
         Row(
             modifier = Modifier.padding(10.dp),
@@ -222,7 +284,10 @@ fun ApiNewsCard(
         ) {
 
             Image(
-                painter = rememberAsyncImagePainter(article.urlToImage),
+                painter = rememberAsyncImagePainter(
+                    model = article.urlToImage,
+                    placeholder = painterResource(id = R.drawable.news)
+                ),
                 contentDescription = null,
                 modifier = Modifier
                     .size(80.dp)
@@ -233,7 +298,7 @@ fun ApiNewsCard(
             Spacer(Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(article.title, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                Text(article.title, fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 2)
                 article.description?.let {
                     Text(it, maxLines = 2, fontSize = 13.sp)
                 }
@@ -279,6 +344,13 @@ fun RowScope.NavItem(
         selected = selected,
         onClick = onClick,
         icon = { Icon(icon, contentDescription = label) },
-        label = { Text(label) }
+        label = { Text(label) },
+        colors = NavigationBarItemDefaults.colors(
+            selectedIconColor = Color(0xFF2678FF),
+            unselectedIconColor = Color.Gray,
+            selectedTextColor = Color(0xFF2678FF),
+            unselectedTextColor = Color.Gray,
+            indicatorColor = Color.White
+        )
     )
 }

@@ -31,6 +31,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import id.app.ddwancan.R
 import id.app.ddwancan.ui.theme.PrimaryBlue
 import id.app.ddwancan.viewmodel.ProfileViewModel
+import androidx.compose.ui.platform.LocalContext
+import android.content.Intent
+import id.app.ddwancan.view.activity.HomeActivity
+import id.app.ddwancan.view.activity.SearchActivity
+import id.app.ddwancan.view.activity.FavoriteActivity
 
 /* ============================================================
    MAIN PROFILE SCREEN
@@ -317,25 +322,40 @@ fun LogoutButton(onLogoutClick: () -> Unit) {
 fun ProfileBottomBar() {
     Column {
         HorizontalDivider(color = Color(0xFFE0E0E0), thickness = 1.dp)
+        val context = LocalContext.current
 
         NavigationBar(containerColor = Color.White) {
             NavigationBarItem(
                 icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
                 label = { Text("Home") },
                 selected = false,
-                onClick = {}
+                onClick = {
+                    val intent = Intent(context, HomeActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    context.startActivity(intent)
+                }
             )
-            NavigationBarItem(
-                icon = { Icon(Icons.Default.Favorite, contentDescription = "Favorite") },
-                label = { Text("Favorite") },
-                selected = false,
-                onClick = {}
-            )
+
             NavigationBarItem(
                 icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
                 label = { Text("Search") },
                 selected = false,
-                onClick = {}
+                onClick = {
+                    val intent = Intent(context, SearchActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    context.startActivity(intent)
+                }
+            )
+
+            NavigationBarItem(
+                icon = { Icon(Icons.Default.Favorite, contentDescription = "Favorite") },
+                label = { Text("Favorite") },
+                selected = false,
+                onClick = {
+                    val intent = Intent(context, FavoriteActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    context.startActivity(intent)
+                }
             )
             NavigationBarItem(
                 icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },

@@ -81,10 +81,18 @@ fun EditProfileScreen(
                 password = password,
                 onPasswordChange = { password = it },
                 onSaveClick = {
-                    viewModel.updateProfile(nameState.value) { success ->
-                        if (success) Toast.makeText(context, "Profil Diupdate", Toast.LENGTH_SHORT).show()
-                        else Toast.makeText(context, "Gagal Update", Toast.LENGTH_SHORT).show()
+                    viewModel.updateProfile(
+                        newName = nameState.value,
+                        newEmail = emailState.value,
+                        newPass = password
+                    ) { success, message ->
+                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                        if (success) {
+                            // Optionally navigate back or refresh data
+                        }
                     }
+
+
                 },
                 onCancelClick = onBackClick
             )
@@ -137,6 +145,20 @@ fun EditProfileContent(
     onSaveClick: () -> Unit,
     onCancelClick: () -> Unit
 ) {
+
+    val showDialog = remember { mutableStateOf(false) }
+
+    if (showDialog.value) {
+        ConfirmationDialog(
+            onConfirm = {
+                onSaveClick()
+                showDialog.value = false
+            },
+            onDismiss = {
+                showDialog.value = false
+            }
+        )
+    }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -187,12 +209,49 @@ fun EditProfileContent(
 
         // Action Buttons (Logout removed from here)
         ActionButtons(
-            onSimpanClick = onSaveClick,
+            onSimpanClick = { showDialog.value = true },
             onBatalClick = onCancelClick
         )
 
         Spacer(Modifier.height(30.dp))
     }
+}
+
+
+/* ============================================================
+   CONFIRMATION DIALOG
+============================================================ */
+@Composable
+fun ConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Konfirmasi Perubahan",
+                fontWeight = FontWeight.SemiBold
+            )
+        },
+        text = {
+            Text("Apakah Anda yakin ingin simpan perubahan profile?")
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+            ) {
+                Text("Simpan", color = Color.White)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Batal", color = Color.Gray)
+            }
+        },
+        shape = RoundedCornerShape(12.dp)
+    )
 }
 
 /* ============================================================
