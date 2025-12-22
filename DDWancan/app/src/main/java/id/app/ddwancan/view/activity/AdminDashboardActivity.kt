@@ -35,6 +35,9 @@ class AdminDashboardActivity : ComponentActivity() {
             "manage_comments" -> {
                 startActivity(Intent(this, ManageCommentsActivity::class.java))
             }
+                "update_news" -> {
+                    startActivity(Intent(this, AdminUpdateNewsActivity::class.java))
+                }
         }
     }
 

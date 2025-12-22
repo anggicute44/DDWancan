@@ -50,39 +50,38 @@ android {
 
 dependencies {
 
-    // --- JETPACK COMPOSE & UI --- 
-    // Gunakan SATU BoM (Bill of Materials) untuk menyelaraskan versi.
+    // --- JETPACK COMPOSE & UI ---
     implementation(platform("androidx.compose:compose-bom:2024.09.01"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.foundation:foundation") // Disederhanakan dari versi beta
+    implementation("androidx.compose.runtime:runtime-livedata")
+    implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.activity:activity-compose:1.9.0") // Gunakan versi terbaru
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0") // Naikkan ke versi stabil terbaru
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.0") // Selaraskan versinya
+    implementation("androidx.activity:activity-compose:1.9.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.0")
 
     // --- CORE & NAVIGATION ---
-    implementation("androidx.core:core-ktx:1.13.1") // Versi terbaru
+    implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.navigation:navigation-compose:2.7.7")
 
     // --- FIREBASE ---
     implementation(platform("com.google.firebase:firebase-bom:33.3.0"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
-    implementation("com.google.android.gms:play-services-auth:21.2.0") // Versi terbaru
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
 
     // --- NETWORKING (Retrofit & Coroutines) ---
-    implementation("com.squareup.retrofit2:retrofit:2.9.0") // Hanya satu deklarasi
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0") // Hanya satu deklarasi
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0") // Versi terbaru
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0") // Versi terbaru
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
 
     // --- IMAGE LOADING (Coil for Compose) ---
     implementation("io.coil-kt:coil-compose:2.6.0")
-    implementation(libs.androidx.compose.foundation) // Versi terbaru
 
     // --- TESTING & DEBUGGING ---
     testImplementation("junit:junit:4.13.2")

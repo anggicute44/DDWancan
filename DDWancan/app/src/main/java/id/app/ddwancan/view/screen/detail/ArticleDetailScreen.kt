@@ -10,6 +10,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState // Tambahan untuk 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Comment
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.*
@@ -22,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import id.app.ddwancan.viewmodel.ArticleDetailViewModel
 import coil.compose.rememberAsyncImagePainter
 import id.app.ddwancan.data.utils.UserSession
 import id.app.ddwancan.viewmodel.CommentViewModel
@@ -46,9 +49,13 @@ fun ArticleDetailScreen(
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    // Memuat komentar saat layar dibuka
+    // ViewModel untuk favorite
+    val detailViewModel: ArticleDetailViewModel = viewModel()
+
+    // Memuat komentar & favorite saat layar dibuka
     LaunchedEffect(articleUrl) {
         commentViewModel.loadComments(sourceId = sourceId, articleUrl = articleUrl)
+        detailViewModel.loadFavoriteState(articleUrl, currentUserId)
     }
 
     // Efek samping: Jika jumlah komentar bertambah (ada komentar baru masuk), scroll ke bawah
@@ -106,6 +113,18 @@ fun ArticleDetailScreen(
                         Icon(Icons.Outlined.Comment, null)
                         Spacer(Modifier.width(6.dp))
                         Text("Comment")
+                    }
+                    // Favorite button
+                    val isFav by detailViewModel.isFavorited
+                    val favCount by detailViewModel.favoritesCount
+
+                    OutlinedButton(onClick = {
+                        detailViewModel.toggleFavorite(articleUrl, currentUserId)
+                    }) {
+                        Icon(if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, null,
+                            tint = if (isFav) MaterialTheme.colorScheme.primary else Color.Unspecified)
+                        Spacer(Modifier.width(6.dp))
+                        Text("$favCount")
                     }
                     OutlinedButton(
                         onClick = {

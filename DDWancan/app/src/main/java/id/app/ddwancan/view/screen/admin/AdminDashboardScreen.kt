@@ -32,7 +32,8 @@ fun AdminDashboardScreen(
     // Daftar Menu Dashboard - DITAMBAHKAN MENU KOMENTAR
     val menuItems = listOf(
         AdminMenuItem("Kelola User", Icons.Default.Person, "manage_users"),
-        AdminMenuItem("Kelola Komentar", Icons.Default.Comment, "manage_comments") // <-- Baru
+        AdminMenuItem("Kelola Komentar", Icons.Default.Comment, "manage_comments"), // <-- Baru
+        AdminMenuItem("Update Berita", Icons.Default.Refresh, "update_news")
     )
 
     Scaffold(

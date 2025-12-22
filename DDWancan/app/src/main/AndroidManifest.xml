@@ -85,6 +85,10 @@
         <activity
             android:name=".view.activity.ManageCommentsActivity"             android:label="Manage Comments"  />
 
+        <activity
+            android:name=".view.activity.AdminUpdateNewsActivity"
+            android:label="Admin Update News" />
+
 
 
     </application>
