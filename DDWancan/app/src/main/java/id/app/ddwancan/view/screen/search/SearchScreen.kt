@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MenuBook
@@ -19,8 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -131,6 +135,7 @@ fun SearchContent(modifier: Modifier = Modifier, viewModel: NewsViewModel = view
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchBarField(value: TextFieldValue, onValueChange: (TextFieldValue) -> Unit) {
+    val focusManager = LocalFocusManager.current
     TextField(
         value = value,
         onValueChange = onValueChange,
@@ -139,6 +144,11 @@ fun SearchBarField(value: TextFieldValue, onValueChange: (TextFieldValue) -> Uni
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp),
+        singleLine = true,
+        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = {
+            focusManager.clearFocus()
+        }),
         colors = TextFieldDefaults.colors(
             focusedContainerColor = Color(0xFFEDEDED),
             unfocusedContainerColor = Color(0xFFEDEDED),
