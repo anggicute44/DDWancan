@@ -64,8 +64,10 @@ class CommentViewModel : ViewModel() {
         db.collection("User").document(userId).get()
             .addOnSuccessListener { documentSnapshot ->
                 var userName = "Unknown User"
+                var userAvatar = 0
                 if (documentSnapshot.exists()) {
                     userName = documentSnapshot.getString("name") ?: "Unknown"
+                    userAvatar = documentSnapshot.getLong("avatar")?.toInt() ?: 0
                 }
 
                 // DATA YANG DISIMPAN (FLAT)
@@ -73,6 +75,7 @@ class CommentViewModel : ViewModel() {
                     "id_user" to userId,
                     "nama_user" to userName,
                     "komentar" to message,
+                    "avatar" to userAvatar,
                     "waktu" to FieldValue.serverTimestamp(),
 
                     // Kita simpan ID Berita di dalam dokumen komentar

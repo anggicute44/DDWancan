@@ -60,6 +60,12 @@ fun EditProfileScreen(
 
     // Password tetap kosong karena alasan keamanan (user isi jika ingin ubah)
     var password by remember { mutableStateOf("") }
+    // Old password untuk konfirmasi saat mengganti password
+    var oldPassword by remember { mutableStateOf("") }
+    // Confirm new password
+    var confirmPassword by remember { mutableStateOf("") }
+    // Selected avatar index (0..7) initialized from ViewModel
+    var selectedAvatar by remember { mutableStateOf(viewModel.avatar.value) }
 
     Scaffold(
         topBar = { EditProfileTopBar(onBackClick) },
@@ -80,11 +86,19 @@ fun EditProfileScreen(
                 onEmailChange = { emailState.value = it },
                 password = password,
                 onPasswordChange = { password = it },
+                oldPassword = oldPassword,
+                onOldPasswordChange = { oldPassword = it },
+                confirmPassword = confirmPassword,
+                onConfirmPasswordChange = { confirmPassword = it },
+                selectedAvatar = selectedAvatar,
+                onSelectedAvatarChange = { selectedAvatar = it },
                 onSaveClick = {
                     viewModel.updateProfile(
                         newName = nameState.value,
                         newEmail = emailState.value,
-                        newPass = password
+                        newPass = password,
+                        oldPass = oldPassword,
+                        avatarIndex = selectedAvatar
                     ) { success, message ->
                         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                         if (success) {
@@ -142,6 +156,12 @@ fun EditProfileContent(
     onEmailChange: (String) -> Unit,
     password: String,
     onPasswordChange: (String) -> Unit,
+    oldPassword: String,
+    onOldPasswordChange: (String) -> Unit,
+    confirmPassword: String,
+    onConfirmPasswordChange: (String) -> Unit,
+    selectedAvatar: Int,
+    onSelectedAvatarChange: (Int) -> Unit,
     onSaveClick: () -> Unit,
     onCancelClick: () -> Unit
 ) {
@@ -168,8 +188,36 @@ fun EditProfileContent(
 
         Spacer(Modifier.height(30.dp))
 
-        // Avatar Section
-        ProfileAvatarSection(userName = name)
+        // Avatar Section (show current)
+        ProfileAvatarSection(userName = name, avatarIndex = selectedAvatar)
+
+        Spacer(Modifier.height(16.dp))
+
+        // Avatar selection grid (8 avatars)
+        val ctx = LocalContext.current
+        Text(text = "Pilih Avatar:", modifier = Modifier.fillMaxWidth(), color = Color.Gray)
+        Spacer(Modifier.height(8.dp))
+        Column(modifier = Modifier.fillMaxWidth()) {
+            for (rowStart in listOf(0, 4)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    for (i in rowStart until rowStart + 4) {
+                        val resId = ctx.resources.getIdentifier("avatar$i", "drawable", ctx.packageName)
+                        val painter = if (resId != 0) painterResource(id = resId) else painterResource(id = R.drawable.ic_launcher_foreground)
+                        Image(
+                            painter = painter,
+                            contentDescription = "avatar_$i",
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(CircleShape)
+                                .border(if (selectedAvatar == i) 2.dp else 1.dp, if (selectedAvatar == i) PrimaryBlue else Color.Gray, CircleShape)
+                                .clickable { onSelectedAvatarChange(i) },
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+            }
+        }
 
         Spacer(Modifier.height(40.dp))
 
@@ -194,9 +242,21 @@ fun EditProfileContent(
 
         Spacer(Modifier.height(24.dp))
 
-        // Input Password
+        // Password fields: Old, New, Confirm (user enters old password to confirm change)
         ProfileInputRow(
-            label = "Change Password (Optional) :",
+            label = "Current Password :",
+            value = oldPassword,
+            onValueChange = onOldPasswordChange,
+            icon = Icons.Outlined.Lock,
+            keyboardType = KeyboardType.Password,
+            visualTransformation = PasswordVisualTransformation(),
+            placeholder = "Masukkan kata sandi lama"
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        ProfileInputRow(
+            label = "New Password (Optional) :",
             value = password,
             onValueChange = onPasswordChange,
             icon = Icons.Outlined.Lock,
@@ -205,11 +265,36 @@ fun EditProfileContent(
             placeholder = "******"
         )
 
+        Spacer(Modifier.height(12.dp))
+
+        ProfileInputRow(
+            label = "Confirm New Password :",
+            value = confirmPassword,
+            onValueChange = onConfirmPasswordChange,
+            icon = Icons.Outlined.Lock,
+            keyboardType = KeyboardType.Password,
+            visualTransformation = PasswordVisualTransformation(),
+            placeholder = "Konfirmasi kata sandi baru"
+        )
+
         Spacer(Modifier.height(40.dp))
 
         // Action Buttons (Logout removed from here)
+        val ctx2 = LocalContext.current
         ActionButtons(
-            onSimpanClick = { showDialog.value = true },
+            onSimpanClick = {
+                var canSave = true
+                if (password.isNotEmpty()) {
+                    if (oldPassword.isEmpty()) {
+                        Toast.makeText(ctx2, "Masukkan kata sandi lama", Toast.LENGTH_SHORT).show()
+                        canSave = false
+                    } else if (password != confirmPassword) {
+                        Toast.makeText(ctx2, "Kata sandi baru tidak cocok", Toast.LENGTH_SHORT).show()
+                        canSave = false
+                    }
+                }
+                if (canSave) showDialog.value = true
+            },
             onBatalClick = onCancelClick
         )
 
@@ -258,11 +343,14 @@ fun ConfirmationDialog(
    AVATAR SECTION
 ============================================================ */
 @Composable
-fun ProfileAvatarSection(userName: String) {
+fun ProfileAvatarSection(userName: String, avatarIndex: Int = 0) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        // Ganti R.drawable.ic_launcher_foreground dengan gambar profil default/user
+        // Use selected avatar resource if exists
+        val ctx = LocalContext.current
+        val resId = ctx.resources.getIdentifier("avatar$avatarIndex", "drawable", ctx.packageName)
+        val painter = if (resId != 0) painterResource(id = resId) else painterResource(id = R.drawable.ic_launcher_foreground)
         Image(
-            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+            painter = painter,
             contentDescription = "Profile Pic",
             modifier = Modifier
                 .size(100.dp)

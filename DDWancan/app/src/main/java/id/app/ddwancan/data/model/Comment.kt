@@ -33,6 +33,9 @@ data class Comment(
 
     @get:PropertyName("status") @set:PropertyName("status")
     var status: String = "ok"
+,
+    @get:PropertyName("avatar") @set:PropertyName("avatar")
+    var avatar: Int = 0
 ) {
     // Constructor kosong wajib untuk Firestore deserialization
     constructor() : this("", "", "", "", "", "", null, 0, "ok")

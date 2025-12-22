@@ -50,6 +50,7 @@ fun ProfileScreen(
     // Mengambil data dari ViewModel (Realtime / dari Firestore)
     val nameState = viewModel.name.value
     val emailState = viewModel.email.value
+    val avatarIndex = viewModel.avatar.value
     val isLoading = viewModel.isLoading.value
 
     Scaffold(
@@ -73,6 +74,7 @@ fun ProfileScreen(
                     .verticalScroll(rememberScrollState()),
                 name = nameState,
                 email = emailState,
+                avatarIndex = avatarIndex,
                 onEditClick = onEditClick,
                 onLogoutClick = {
                     // Panggil fungsi logout di ViewModel
@@ -124,6 +126,7 @@ fun ProfileContent(
     modifier: Modifier = Modifier,
     name: String,
     email: String,
+    avatarIndex: Int = 0,
     onEditClick: () -> Unit,
     onLogoutClick: () -> Unit
 ) {
@@ -136,7 +139,7 @@ fun ProfileContent(
 
         Spacer(Modifier.height(30.dp))
 
-        ProfileAvatar()
+        ProfileAvatar(avatarIndex = avatarIndex)
 
         Spacer(Modifier.height(16.dp))
 
@@ -234,7 +237,7 @@ fun ProfileInputRowDisplay(
    PROFILE AVATAR
 ============================================================ */
 @Composable
-fun ProfileAvatar() {
+fun ProfileAvatar(avatarIndex: Int) {
     val borderColor = PrimaryBlue
     val borderWidth = 3.dp
     val avatarSize = 110.dp
@@ -251,9 +254,12 @@ fun ProfileAvatar() {
                 .border(borderWidth, borderColor, CircleShape)
                 .padding(borderWidth)
         ) {
-            // Gunakan gambar default android jika gambar user belum diset
+            // Use selected avatar resource if available
+            val ctx = LocalContext.current
+            val resId = ctx.resources.getIdentifier("avatar$avatarIndex", "drawable", ctx.packageName)
+            val painter = if (resId != 0) painterResource(id = resId) else painterResource(id = R.drawable.ic_launcher_foreground)
             Image(
-                painter = painterResource(R.drawable.ic_launcher_foreground), // Ganti dengan R.drawable.profilefoto jika ada
+                painter = painter,
                 contentDescription = "Profile Photo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
