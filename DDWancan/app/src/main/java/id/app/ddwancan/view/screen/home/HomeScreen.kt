@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -25,7 +24,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.delay
 import coil.compose.rememberAsyncImagePainter
 import id.app.ddwancan.R
 import id.app.ddwancan.data.model.Article
@@ -75,19 +73,7 @@ fun HomeScreen(
                         Spacer(Modifier.height(24.dp))
                         Text("News Today", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(12.dp))
-                        BreakingNewsImage(
-                            news = newsList.take(4),
-                            onItemClick = { article ->
-                                val intent = Intent(context, ArticleDetailActivity::class.java).apply {
-                                    putExtra("SOURCE_ID", article.source?.id)
-                                    putExtra("TITLE", article.title)
-                                    putExtra("CONTENT", article.description ?: "")
-                                    putExtra("IMAGE", article.urlToImage)
-                                    putExtra("URL", article.url)
-                                }
-                                context.startActivity(intent)
-                            }
-                        )
+                        BreakingNewsImage()
                         Spacer(Modifier.height(24.dp))
                     }
 
@@ -137,55 +123,16 @@ fun HomeTopBar() {
    BREAKING IMAGE
 ============================================================ */
 @Composable
-fun BreakingNewsImage(
-    news: List<Article>,
-    onItemClick: (Article) -> Unit
-) {
-    val state = rememberLazyListState()
-    Box(modifier = Modifier
-        .fillMaxWidth()
-        .height(170.dp)) {
-
-        if (news.isEmpty()) {
-            Image(
-                painter = painterResource(R.drawable.logo2),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.LightGray, RoundedCornerShape(12.dp))
-            )
-            return@Box
-        }
-
-        LazyRow(state = state, modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(news) { article ->
-                val painter = if (!article.urlToImage.isNullOrBlank()) rememberAsyncImagePainter(article.urlToImage)
-                else painterResource(R.drawable.news)
-
-                Image(
-                    painter = painter,
-                    contentDescription = article.title,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillParentMaxWidth()
-                        .clickable { onItemClick(article) }
-                        .background(Color.LightGray, RoundedCornerShape(12.dp))
-                )
-            }
-        }
-
-        // Auto-scroll to the next item every 3 seconds
-        LaunchedEffect(news, state) {
-            if (news.isEmpty()) return@LaunchedEffect
-            var index = 0
-            while (true) {
-                delay(3000)
-                index = (index + 1) % news.size
-                state.animateScrollToItem(index)
-            }
-        }
-    }
+fun BreakingNewsImage() {
+    Image(
+        painter = painterResource(R.drawable.logo2),
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(170.dp)
+            .background(Color.LightGray, RoundedCornerShape(12.dp))
+    )
 }
 
 /* ============================================================

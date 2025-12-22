@@ -4,10 +4,11 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.firestore.FirebaseFirestore
+import id.app.ddwancan.data.network.RetrofitClient
 import kotlinx.coroutines.launch
 
 class NewsViewModel : ViewModel() {
+
     private val _newsList = mutableStateOf<List<Article>>(emptyList())
     val newsList: State<List<Article>> = _newsList
 
@@ -18,38 +19,22 @@ class NewsViewModel : ViewModel() {
     val errorMessage: State<String?> = _errorMessage
 
     fun fetchNews(category: String?) {
-        // Sekarang ambil data dari Firestore (collection "News") agar user tidak memanggil API eksternal
-        _isLoading.value = true
-        _errorMessage.value = null
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null // ✅ reset error
 
-        val db = FirebaseFirestore.getInstance()
-        db.collection("News")
-            .get()
-            .addOnSuccessListener { result ->
-                val list = mutableListOf<Article>()
-                for (doc in result.documents) {
-                    val sourceId = doc.getString("source_id")
-                    val sourceName = doc.getString("source_name") ?: ""
-                    val source = Source(sourceId, sourceName)
-
-                    val article = Article(
-                        source = source,
-                        author = doc.getString("author"),
-                        title = doc.getString("title") ?: "",
-                        description = doc.getString("description"),
-                        url = doc.getString("url") ?: "",
-                        urlToImage = doc.getString("urlToImage"),
-                        publishedAt = doc.getString("publishedAt") ?: ""
-                    )
-                    list.add(article)
-                }
-                _newsList.value = list
-                _isLoading.value = false
-            }
-            .addOnFailureListener { e ->
+            try {
+                val response = RetrofitClient.apiService.getTopHeadlines(
+                    category = category,
+                    apiKey = "39b789cf17324dc9bc343edb18ab7e24"
+                )
+                _newsList.value = response.articles
+            } catch (e: Exception) {
                 _errorMessage.value = e.message
+            } finally {
                 _isLoading.value = false
             }
+        }
     }
 }
 
