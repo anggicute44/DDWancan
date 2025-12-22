@@ -1,6 +1,7 @@
 package id.app.ddwancan.view.screen.favorite
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,42 +12,29 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
+import android.content.Intent
+import id.app.ddwancan.view.activity.ArticleDetailActivity
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberAsyncImagePainter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import id.app.ddwancan.R
-import id.app.ddwancan.data.model.Berita
+import id.app.ddwancan.data.model.Article
+import id.app.ddwancan.viewmodel.FavoriteViewModel
 import id.app.ddwancan.navigation.BottomNavigationBar
 import id.app.ddwancan.navigation.NavRoutes
 import id.app.ddwancan.ui.theme.DDwancanTheme
 
-/* ============================================================
-   DUMMY DATA (SEMENTARA)
-============================================================ */
-private val dummyFavoriteBerita = listOf(
-    Berita(
-        id = 1,
-        judul = "Universitas dan Organisasi Turki",
-        deskripsi = "UKDW Perluas Jejaring...",
-        gambar = "news",
-        views = 20,
-        createdAt = "3 Hours ago"
-    ),
-    Berita(
-        id = 2,
-        judul = "Dies Natalis UKDW",
-        deskripsi = "Fun Run meriah penuh semangat!",
-        gambar = "news",
-        views = 55,
-        createdAt = "7 Hours ago"
-    )
-)
 
 /* ============================================================
    FAVORITE SCREEN
@@ -94,7 +82,14 @@ fun FavoriteTopBar() {
    CONTENT
 ============================================================ */
 @Composable
-fun FavoriteContent(modifier: Modifier = Modifier) {
+fun FavoriteContent(modifier: Modifier = Modifier, viewModel: FavoriteViewModel = viewModel()) {
+    // Muat data saat pertama kali
+    LaunchedEffect(Unit) {
+        viewModel.loadFavorites()
+    }
+
+    val favorites by viewModel.favorites
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -108,8 +103,14 @@ fun FavoriteContent(modifier: Modifier = Modifier) {
             Spacer(Modifier.height(12.dp))
         }
 
-        items(dummyFavoriteBerita) { berita ->
-            FavoriteCard(berita)
+        if (favorites.isEmpty()) {
+            item {
+                Text("Belum ada artikel favorit", color = Color.Gray, modifier = Modifier.padding(8.dp))
+            }
+        } else {
+            items(favorites) { article ->
+                FavoriteCard(article)
+            }
         }
     }
 }
@@ -118,7 +119,8 @@ fun FavoriteContent(modifier: Modifier = Modifier) {
    FAVORITE CARD
 ============================================================ */
 @Composable
-fun FavoriteCard(berita: Berita) {
+fun FavoriteCard(article: Article) {
+    val context = LocalContext.current
     Surface(
         shape = RoundedCornerShape(12.dp),
         shadowElevation = 4.dp,
@@ -126,14 +128,30 @@ fun FavoriteCard(berita: Berita) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
+            .clickable {
+                val intent = Intent(context, ArticleDetailActivity::class.java).apply {
+                    putExtra("SOURCE_ID", article.source?.id ?: "unknown")
+                    putExtra("TITLE", article.title)
+                    putExtra("CONTENT", article.description ?: "")
+                    putExtra("IMAGE", article.urlToImage)
+                    putExtra("URL", article.url)
+                }
+                context.startActivity(intent)
+            }
     ) {
         Row(
             modifier = Modifier.padding(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
 
+            val painter = if (!article.urlToImage.isNullOrBlank()) {
+                rememberAsyncImagePainter(article.urlToImage)
+            } else {
+                painterResource(R.drawable.news)
+            }
+
             Image(
-                painter = painterResource(R.drawable.news),
+                painter = painter,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -144,11 +162,11 @@ fun FavoriteCard(berita: Berita) {
             Spacer(Modifier.width(12.dp))
 
             Column(Modifier.weight(1f)) {
-                Text(berita.judul, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                Text(berita.deskripsi, maxLines = 2, fontSize = 13.sp)
+                Text(article.title, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                Text(article.description ?: "", maxLines = 2, fontSize = 13.sp)
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "👁 ${berita.views} • ${berita.createdAt}",
+                    article.publishedAt,
                     fontSize = 12.sp
                 )
             }

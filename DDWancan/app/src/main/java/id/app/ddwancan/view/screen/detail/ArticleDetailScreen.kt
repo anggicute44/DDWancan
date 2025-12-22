@@ -119,7 +119,14 @@ fun ArticleDetailScreen(
                     val favCount by detailViewModel.favoritesCount
 
                     OutlinedButton(onClick = {
-                        detailViewModel.toggleFavorite(articleUrl, currentUserId)
+                        detailViewModel.toggleFavorite(
+                            articleUrl = articleUrl,
+                            userId = currentUserId,
+                            title = title,
+                            description = content,
+                            imageUrl = imageUrl,
+                            publishedAt = null
+                        )
                     }) {
                         Icon(if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, null,
                             tint = if (isFav) MaterialTheme.colorScheme.primary else Color.Unspecified)

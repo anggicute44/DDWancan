@@ -35,7 +35,14 @@ class ArticleDetailViewModel : ViewModel() {
 			}
 	}
 
-	fun toggleFavorite(articleUrl: String, userId: String?) {
+	fun toggleFavorite(
+		articleUrl: String,
+		userId: String?,
+		title: String? = null,
+		description: String? = null,
+		imageUrl: String? = null,
+		publishedAt: String? = null
+	) {
 		if (userId.isNullOrBlank()) {
 			error.value = "Silakan login untuk memberi favorite"
 			return
@@ -59,6 +66,13 @@ class ArticleDetailViewModel : ViewModel() {
 					).addOnSuccessListener {
 						isFavorited.value = false
 						favoritesCount.value = (favoritesCount.value - 1).coerceAtLeast(0)
+						// Hapus dari koleksi favorites user
+						try {
+							db.collection("users").document(userId!!)
+								.collection("favorites").document(docId)
+								.delete()
+						} catch (ignored: Exception) {
+						}
 						isLoading.value = false
 					}.addOnFailureListener { e ->
 						error.value = e.message
@@ -72,6 +86,20 @@ class ArticleDetailViewModel : ViewModel() {
 					).addOnSuccessListener {
 						isFavorited.value = true
 						favoritesCount.value = favoritesCount.value + 1
+						// Simpan ke koleksi favorites milik user
+						try {
+							val favData = mapOf(
+								"title" to (title ?: ""),
+								"description" to (description ?: ""),
+								"url" to articleUrl,
+								"urlToImage" to (imageUrl ?: ""),
+								"publishedAt" to (publishedAt ?: "")
+							)
+							db.collection("users").document(userId!!)
+								.collection("favorites").document(docId)
+								.set(favData)
+						} catch (ignored: Exception) {
+						}
 						isLoading.value = false
 					}.addOnFailureListener { e ->
 						// Jika dokumen belum ada, buat dokumen baru dengan field yang dibutuhkan
@@ -83,6 +111,20 @@ class ArticleDetailViewModel : ViewModel() {
 						).addOnSuccessListener {
 							isFavorited.value = true
 							favoritesCount.value = 1
+							// Simpan juga ke koleksi favorites user
+							try {
+								val favData = mapOf(
+									"title" to (title ?: ""),
+									"description" to (description ?: ""),
+									"url" to articleUrl,
+									"urlToImage" to (imageUrl ?: ""),
+									"publishedAt" to (publishedAt ?: "")
+								)
+								db.collection("users").document(userId!!)
+									.collection("favorites").document(docId)
+									.set(favData)
+							} catch (ignored: Exception) {
+							}
 							isLoading.value = false
 						}.addOnFailureListener { ex ->
 							error.value = ex.message
