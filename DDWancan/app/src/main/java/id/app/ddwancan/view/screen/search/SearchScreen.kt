@@ -1,7 +1,7 @@
 
 package id.app.ddwancan.view.screen.search
 
-
+import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,41 +13,26 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberAsyncImagePainter
 import id.app.ddwancan.R
-import id.app.ddwancan.data.model.Berita
+import id.app.ddwancan.data.model.Article
+import id.app.ddwancan.data.model.NewsViewModel
 import id.app.ddwancan.navigation.BottomNavigationBar
 import id.app.ddwancan.navigation.NavRoutes
-
-/* ============================================================
-   DUMMY DATA (SEMENTARA)
-============================================================ */
-private val dummyBerita = listOf(
-    Berita(
-        id = 1,
-        judul = "Universitas dan Organisasi Turki",
-        deskripsi = "UKDW Perluas Jejaring...",
-        gambar = "news",
-        views = 20,
-        createdAt = "3 Hours ago"
-    ),
-    Berita(
-        id = 2,
-        judul = "Dies Natalis UKDW",
-        deskripsi = "Fun Run meriah penuh semangat!",
-        gambar = "news",
-        views = 55,
-        createdAt = "7 Hours ago"
-    )
-)
+import id.app.ddwancan.view.activity.ArticleDetailActivity
+import id.app.ddwancan.view.screen.home.ApiNewsCard
 
 /* ============================================================
    MAIN SCREEN
@@ -99,7 +84,17 @@ fun SearchTopBar() {
    CONTENT
 ============================================================ */
 @Composable
-fun SearchContent(modifier: Modifier = Modifier) {
+fun SearchContent(modifier: Modifier = Modifier, viewModel: NewsViewModel = viewModel()) {
+    val context = LocalContext.current
+    var query by remember { mutableStateOf(TextFieldValue("")) }
+    val news by viewModel.newsList
+
+    LaunchedEffect(Unit) { viewModel.fetchNews(null) }
+
+    val filtered = if (query.text.isBlank()) news else news.filter {
+        it.title.contains(query.text, ignoreCase = true)
+    }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -109,14 +104,23 @@ fun SearchContent(modifier: Modifier = Modifier) {
         item {
             Text("Cari Berita", fontSize = 22.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(12.dp))
-            SearchBarField()
+            SearchBarField(query) { newVal -> query = newVal }
             Spacer(Modifier.height(20.dp))
             Text("Hasil Pencarian", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(12.dp))
         }
 
-        items(dummyBerita) { berita ->
-            SearchNewsCard(berita)
+        items(filtered) { article ->
+            ApiNewsCard(article) {
+                val intent = Intent(context, ArticleDetailActivity::class.java).apply {
+                    putExtra("SOURCE_ID", article.source?.id)
+                    putExtra("TITLE", article.title)
+                    putExtra("CONTENT", article.description ?: "")
+                    putExtra("IMAGE", article.urlToImage)
+                    putExtra("URL", article.url)
+                }
+                context.startActivity(intent)
+            }
         }
     }
 }
@@ -124,31 +128,33 @@ fun SearchContent(modifier: Modifier = Modifier) {
 /* ============================================================
    SEARCH BAR
 ============================================================ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchBarField() {
-    Surface(
-        shape = RoundedCornerShape(30.dp),
-        color = Color(0xFFEDEDED),
+fun SearchBarField(value: TextFieldValue, onValueChange: (TextFieldValue) -> Unit) {
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text("Cari berita...") },
+        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        ) {
-            Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray)
-            Spacer(Modifier.width(12.dp))
-            Text("Cari berita...", color = Color.Gray)
-        }
-    }
+            .height(56.dp),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color(0xFFEDEDED),
+            unfocusedContainerColor = Color(0xFFEDEDED),
+            disabledContainerColor = Color(0xFFEDEDED),
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent
+        )
+    )
 }
 
 /* ============================================================
    SEARCH NEWS CARD
 ============================================================ */
 @Composable
-fun SearchNewsCard(berita: Berita) {
+fun SearchNewsCard(berita: Article) {
     Surface(
         shape = RoundedCornerShape(12.dp),
         shadowElevation = 4.dp,
@@ -163,7 +169,7 @@ fun SearchNewsCard(berita: Berita) {
         ) {
 
             Image(
-                painter = painterResource(R.drawable.news),
+                painter = rememberAsyncImagePainter(berita.urlToImage),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -174,13 +180,8 @@ fun SearchNewsCard(berita: Berita) {
             Spacer(Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(berita.judul, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                Text(berita.deskripsi, maxLines = 2, fontSize = 13.sp)
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    "👁 ${berita.views} • ${berita.createdAt}",
-                    fontSize = 12.sp
-                )
+                Text(berita.title, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                Text(berita.description ?: "", maxLines = 2, fontSize = 13.sp)
             }
 
             IconButton(onClick = { /* TODO favorite */ }) {
