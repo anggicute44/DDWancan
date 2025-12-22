@@ -47,7 +47,7 @@ fun SearchScreen() {
     Scaffold(
         topBar = { SearchTopBar() },
         bottomBar = { BottomNavigationBar(NavRoutes.SEARCH) },
-        containerColor = Color.White
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         SearchContent(
             modifier = Modifier.padding(padding)
@@ -67,19 +67,19 @@ fun SearchTopBar() {
                 Icon(
                     imageVector = Icons.Default.MenuBook,
                     contentDescription = null,
-                    tint = Color.White
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
                 Spacer(Modifier.width(6.dp))
                 Text(
                     text = "D’Wacana",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp
                 )
             }
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = Color(0xFF2678FF)
+            containerColor = MaterialTheme.colorScheme.primary
         )
     )
 }
@@ -106,11 +106,11 @@ fun SearchContent(modifier: Modifier = Modifier, viewModel: NewsViewModel = view
     ) {
 
         item {
-            Text("Cari Berita", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text("Cari Berita", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
             Spacer(Modifier.height(12.dp))
             SearchBarField(query) { newVal -> query = newVal }
             Spacer(Modifier.height(20.dp))
-            Text("Hasil Pencarian", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            Text("Hasil Pencarian", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground)
             Spacer(Modifier.height(12.dp))
         }
 
@@ -152,12 +152,14 @@ fun SearchBarField(value: TextFieldValue, onValueChange: (TextFieldValue) -> Uni
             focusManager.clearFocus()
         }),
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color(0xFFEDEDED),
-            unfocusedContainerColor = Color(0xFFEDEDED),
-            disabledContainerColor = Color(0xFFEDEDED),
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent
+            disabledIndicatorColor = Color.Transparent,
+            focusedLeadingIconColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
         )
     )
 }
@@ -170,7 +172,7 @@ fun SearchNewsCard(berita: Article) {
     Surface(
         shape = RoundedCornerShape(12.dp),
         shadowElevation = 4.dp,
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
@@ -186,18 +188,18 @@ fun SearchNewsCard(berita: Article) {
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(80.dp)
-                    .background(Color.LightGray, RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp))
             )
 
             Spacer(Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(berita.title, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                Text(berita.description ?: "", maxLines = 2, fontSize = 13.sp)
+                Text(berita.title, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurface)
+                Text(berita.description ?: "", maxLines = 2, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
             }
 
             IconButton(onClick = { /* TODO favorite */ }) {
-                Icon(Icons.Default.FavoriteBorder, contentDescription = null)
+                Icon(Icons.Default.FavoriteBorder, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
             }
         }
     }

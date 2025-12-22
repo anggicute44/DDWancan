@@ -26,7 +26,7 @@ fun WelcomeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0F6DDC))
+            .background(MaterialTheme.colorScheme.primary)
     ) {
         Column(
             modifier = Modifier
@@ -47,7 +47,7 @@ fun WelcomeScreen(
             Text(
                 text = "The NextGen short NEWS app",
                 fontSize = 16.sp,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary,
                 textAlign = TextAlign.Center
             )
 
@@ -58,7 +58,7 @@ fun WelcomeScreen(
                 modifier = Modifier
                     .width(200.dp)
                     .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Row(
@@ -69,13 +69,13 @@ fun WelcomeScreen(
                         text = "Mulai",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF0F6DDC)
+                        color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
-                        tint = Color(0xFF0F6DDC),
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp)
                     )
                 }

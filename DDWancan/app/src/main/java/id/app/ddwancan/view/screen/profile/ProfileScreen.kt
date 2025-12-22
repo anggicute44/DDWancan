@@ -50,12 +50,13 @@ fun ProfileScreen(
     // Mengambil data dari ViewModel (Realtime / dari Firestore)
     val nameState = viewModel.name.value
     val emailState = viewModel.email.value
+    val avatarIndex = viewModel.avatar.value
     val isLoading = viewModel.isLoading.value
 
     Scaffold(
         topBar = { ProfileTopBar() },
         bottomBar = { ProfileBottomBar() },
-        containerColor = Color.White
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         if (isLoading) {
             Box(
@@ -64,7 +65,7 @@ fun ProfileScreen(
                     .padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = PrimaryBlue)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
             ProfileContent(
@@ -73,6 +74,7 @@ fun ProfileScreen(
                     .verticalScroll(rememberScrollState()),
                 name = nameState,
                 email = emailState,
+                avatarIndex = avatarIndex,
                 onEditClick = onEditClick,
                 onLogoutClick = {
                     // Panggil fungsi logout di ViewModel
@@ -101,17 +103,17 @@ fun ProfileTopBar() {
                 text = "Profil",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onPrimary
             )
         },
         actions = {
             // Opsional: Ikon Settings
             IconButton(onClick = { /* TODO: Settings */ }) {
-                Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Color.White)
+                Icon(Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onPrimary)
             }
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = PrimaryBlue
+            containerColor = MaterialTheme.colorScheme.primary
         )
     )
 }
@@ -124,6 +126,7 @@ fun ProfileContent(
     modifier: Modifier = Modifier,
     name: String,
     email: String,
+    avatarIndex: Int = 0,
     onEditClick: () -> Unit,
     onLogoutClick: () -> Unit
 ) {
@@ -136,7 +139,7 @@ fun ProfileContent(
 
         Spacer(Modifier.height(30.dp))
 
-        ProfileAvatar()
+        ProfileAvatar(avatarIndex = avatarIndex)
 
         Spacer(Modifier.height(16.dp))
 
@@ -145,7 +148,7 @@ fun ProfileContent(
             text = if (name.isNotEmpty()) "@${name.replace(" ", "").lowercase()}" else "@user",
             fontWeight = FontWeight.SemiBold,
             fontSize = 16.sp,
-            color = Color.Black
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         Spacer(Modifier.height(40.dp))
@@ -207,7 +210,7 @@ fun ProfileInputRowDisplay(
                 Text(
                     text = label,
                     fontSize = 14.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -216,7 +219,7 @@ fun ProfileInputRowDisplay(
                     text = value,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
         }
@@ -225,7 +228,7 @@ fun ProfileInputRowDisplay(
 
         HorizontalDivider(
             thickness = 1.dp,
-            color = Color.LightGray
+            color = MaterialTheme.colorScheme.outline
         )
     }
 }
@@ -234,8 +237,8 @@ fun ProfileInputRowDisplay(
    PROFILE AVATAR
 ============================================================ */
 @Composable
-fun ProfileAvatar() {
-    val borderColor = PrimaryBlue
+fun ProfileAvatar(avatarIndex: Int) {
+    val borderColor = MaterialTheme.colorScheme.primary
     val borderWidth = 3.dp
     val avatarSize = 110.dp
 
@@ -247,19 +250,22 @@ fun ProfileAvatar() {
             modifier = Modifier
                 .size(avatarSize)
                 .clip(CircleShape)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.surface)
                 .border(borderWidth, borderColor, CircleShape)
                 .padding(borderWidth)
         ) {
-            // Gunakan gambar default android jika gambar user belum diset
+            // Use selected avatar resource if available
+            val ctx = LocalContext.current
+            val resId = ctx.resources.getIdentifier("avatar$avatarIndex", "drawable", ctx.packageName)
+            val painter = if (resId != 0) painterResource(id = resId) else painterResource(id = R.drawable.ic_launcher_foreground)
             Image(
-                painter = painterResource(R.drawable.ic_launcher_foreground), // Ganti dengan R.drawable.profilefoto jika ada
+                painter = painter,
                 contentDescription = "Profile Photo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(CircleShape)
-                    .background(Color.LightGray) // Background jika transparan
+                    .background(MaterialTheme.colorScheme.surfaceVariant) // Background jika transparan
             )
         }
     }
@@ -272,7 +278,7 @@ fun ProfileAvatar() {
 fun EditProfileButton(onEditClick: () -> Unit) {
     Button(
         onClick = onEditClick,
-        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
         modifier = Modifier
             .fillMaxWidth()
             .height(50.dp),
@@ -282,7 +288,7 @@ fun EditProfileButton(onEditClick: () -> Unit) {
             text = "EDIT PROFIL",
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
-            color = Color.White
+            color = MaterialTheme.colorScheme.onPrimary
         )
     }
 }
@@ -295,10 +301,10 @@ fun LogoutButton(onLogoutClick: () -> Unit) {
             .fillMaxWidth()
             .height(50.dp),
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, Color.Red),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
         colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = Color.Red,
-            containerColor = Color.White
+            contentColor = MaterialTheme.colorScheme.error,
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Icon(
@@ -321,10 +327,10 @@ fun LogoutButton(onLogoutClick: () -> Unit) {
 @Composable
 fun ProfileBottomBar() {
     Column {
-        HorizontalDivider(color = Color(0xFFE0E0E0), thickness = 1.dp)
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
         val context = LocalContext.current
 
-        NavigationBar(containerColor = Color.White) {
+        NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
             NavigationBarItem(
                 icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
                 label = { Text("Home") },
@@ -363,8 +369,8 @@ fun ProfileBottomBar() {
                 selected = true,
                 onClick = {},
                 colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = Color(0xFFE3F2FD),
-                    selectedIconColor = PrimaryBlue
+                    indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                    selectedIconColor = MaterialTheme.colorScheme.primary
                 )
             )
         }

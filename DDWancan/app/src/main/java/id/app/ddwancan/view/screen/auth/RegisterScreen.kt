@@ -30,8 +30,6 @@ fun RegisterScreen(
     onRegisterClick: (String, String, String) -> Unit, // name, email, password
     onBackToLoginClick: () -> Unit
 ) {
-    val PrimaryBlue = Color(0xFF1976D2)
-
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -39,7 +37,7 @@ fun RegisterScreen(
     // 1. State untuk visibilitas password
     var isPasswordVisible by remember { mutableStateOf(false) }
 
-    Scaffold(containerColor = Color.White) { padding ->
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             Column(
                 modifier = Modifier
@@ -63,7 +61,7 @@ fun RegisterScreen(
                     "Create Account",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryBlue
+                    color = MaterialTheme.colorScheme.primary
                 )
 
                 Spacer(Modifier.height(24.dp))
@@ -75,7 +73,15 @@ fun RegisterScreen(
                     label = { Text("Full Name") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
-                    singleLine = true
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                    )
                 )
 
                 Spacer(Modifier.height(16.dp))
@@ -88,7 +94,15 @@ fun RegisterScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                    )
                 )
 
                 Spacer(Modifier.height(16.dp))
@@ -104,6 +118,14 @@ fun RegisterScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     // 2. Ubah transformasi visual berdasarkan state
                     visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                    ),
                     // 3. Tambahkan ikon mata di sebelah kanan
                     trailingIcon = {
                         val image = if (isPasswordVisible)
@@ -114,7 +136,7 @@ fun RegisterScreen(
                         val description = if (isPasswordVisible) "Hide password" else "Show password"
 
                         IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
-                            Icon(imageVector = image, contentDescription = description)
+                            Icon(imageVector = image, contentDescription = description, tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
                         }
                     }
                 )
@@ -125,22 +147,22 @@ fun RegisterScreen(
                 Button(
                     onClick = { onRegisterClick(name, email, password) },
                     modifier = Modifier.fillMaxWidth().height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Sign Up", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Sign Up", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
                 }
 
                 Spacer(Modifier.height(16.dp))
 
                 // BACK TO LOGIN
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Already have an account? ", fontSize = 14.sp, color = Color.Gray)
+                    Text("Already have an account? ", fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
                     Text(
                         "Login",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = PrimaryBlue,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.clickable { onBackToLoginClick() }
                     )
                 }

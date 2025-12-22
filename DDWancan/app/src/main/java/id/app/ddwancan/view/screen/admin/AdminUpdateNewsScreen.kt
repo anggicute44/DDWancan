@@ -1,5 +1,6 @@
 package id.app.ddwancan.view.screen.admin
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,39 +27,64 @@ fun AdminUpdateNewsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Admin - Update Berita") },
+            TopAppBar(
+                title = { Text("Admin - Update Berita") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
+                .padding(16.dp)
+                .background(MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            Text("Pilih jenis feed yang ingin di-update:")
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Simple radio list for presets
+            // Simple radio list for presets with hardcoded names
+            val presetNames = listOf(
+                "Apple News",
+                "Tesla News",
+                "Business US News",
+                "Techcrunch News",
+                "Wall Street News"
+            )
+            
+            // Get current selected preset name for confirmation dialog
+            var selectedPresetName by remember { mutableStateOf("Apple News") }
+            
             Column(modifier = Modifier.fillMaxWidth()) {
-                for (preset in id.app.ddwancan.viewmodel.AdminNewsViewModel.Preset.values()) {
+                val allPresets = id.app.ddwancan.viewmodel.AdminNewsViewModel.Preset.values()
+                for ((index, preset) in allPresets.withIndex()) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
                     ) {
                         RadioButton(
                             selected = preset == selectedPreset,
-                            onClick = { selectedPreset = preset }
+                            onClick = { 
+                                selectedPreset = preset
+                                selectedPresetName = if (index < presetNames.size) presetNames[index] else preset.label
+                            }
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(preset.label)
+                        Text(
+                            if (index < presetNames.size) presetNames[index] else preset.label,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
             }
@@ -76,7 +102,7 @@ fun AdminUpdateNewsScreen(
                 AlertDialog(
                     onDismissRequest = { showConfirm = false },
                     title = { Text("Konfirmasi Update") },
-                    text = { Text("Anda akan meng-update feed: ${selectedPreset.label}. Lanjutkan?") },
+                    text = { Text("Anda akan mengupdate semua berita dari $selectedPresetName, lanjutkan?") },
                     confirmButton = {
                         TextButton(onClick = {
                             showConfirm = false
@@ -91,7 +117,10 @@ fun AdminUpdateNewsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(text = status)
+            Text(
+                text = status,
+                color = MaterialTheme.colorScheme.onBackground
+            )
         }
     }
 }

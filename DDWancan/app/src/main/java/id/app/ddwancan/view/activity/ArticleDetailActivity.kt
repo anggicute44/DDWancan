@@ -3,6 +3,7 @@ package id.app.ddwancan.view.activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import id.app.ddwancan.ui.theme.DDwancanTheme
 import id.app.ddwancan.view.screen.detail.ArticleDetailScreen
 
 class ArticleDetailActivity : ComponentActivity() {
@@ -20,16 +21,18 @@ class ArticleDetailActivity : ComponentActivity() {
         val publishedAt = intent.getStringExtra("PUBLISHED_AT")
 
         setContent {
-            ArticleDetailScreen(
-                sourceId = sourceId, // Teruskan sourceId ke Composable
-                title = title,
-                content = content,
-                imageUrl = imageUrl,
-                articleUrl = articleUrl,
-                author = author,
-                publishedAt = publishedAt,
-                onBack = { finish() }
-            )
+            DDwancanTheme {
+                ArticleDetailScreen(
+                    sourceId = sourceId, // Teruskan sourceId ke Composable
+                    title = title,
+                    content = content,
+                    imageUrl = imageUrl,
+                    articleUrl = articleUrl,
+                    author = author,
+                    publishedAt = publishedAt,
+                    onBack = { finish() }
+                )
+            }
         }
     }
 }

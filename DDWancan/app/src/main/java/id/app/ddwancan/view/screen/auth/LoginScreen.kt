@@ -30,7 +30,7 @@ fun LoginScreen(
     onAdminLoginClick: () -> Unit,
     onSignUpClick: () -> Unit = {}
 ) {
-    val PrimaryBlue = Color(0xFF1976D2)
+    val PrimaryBlue = MaterialTheme.colorScheme.primary
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -38,7 +38,7 @@ fun LoginScreen(
     // 1. State untuk mengontrol visibilitas password
     var isPasswordVisible by remember { mutableStateOf(false) }
 
-    Scaffold(containerColor = Color.White) { padding ->
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -114,14 +114,14 @@ fun LoginScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue, contentColor = MaterialTheme.colorScheme.onPrimary),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
                         "Login",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
 
@@ -132,7 +132,7 @@ fun LoginScreen(
                     "Forgot Password?",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                     modifier = Modifier.clickable { /* Handle Forgot Password */ }
                 )
 
@@ -151,7 +151,7 @@ fun LoginScreen(
                     modifier = Modifier
                         .size(50.dp)
                         .clip(CircleShape)
-                        .border(1.dp, Color.LightGray, CircleShape)
+                        .border(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.12f), CircleShape)
                         .clickable { onGoogleLogin() },
                     contentAlignment = Alignment.Center
                 ) {
@@ -167,7 +167,7 @@ fun LoginScreen(
 
                 // SIGN UP SECTION
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Don't have an account? ", fontSize = 14.sp, color = Color.Gray)
+                    Text("Don't have an account? ", fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
                     Text(
                         "Sign Up",
                         fontSize = 14.sp,

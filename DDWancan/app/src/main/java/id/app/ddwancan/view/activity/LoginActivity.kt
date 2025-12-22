@@ -128,7 +128,6 @@ class LoginActivity : ComponentActivity() {
         val uid = firebaseUser.uid
         val displayName = firebaseUser.displayName ?: ""
         val email = firebaseUser.email ?: ""
-        val photoUrl = firebaseUser.photoUrl?.toString() ?: ""
 
         val userRef = db.collection("User").document(uid)
         userRef.get()
@@ -139,8 +138,8 @@ class LoginActivity : ComponentActivity() {
                         "uid" to uid,
                         "name" to (if (displayName.isNotBlank()) displayName else email.substringBefore('@')),
                         "email" to email,
-                        "photoUrl" to photoUrl,
                         "role" to "user",
+                        "avatar" to 0,
                         "createdAt" to FieldValue.serverTimestamp()
                     )
                     userRef.set(data)
@@ -152,8 +151,9 @@ class LoginActivity : ComponentActivity() {
                     if ((doc.getString("name") ?: "").isBlank()) {
                         updates["name"] = if (displayName.isNotBlank()) displayName else email.substringBefore('@')
                     }
-                    if ((doc.getString("photoUrl") ?: "").isBlank() && photoUrl.isNotBlank()) {
-                        updates["photoUrl"] = photoUrl
+                    // Ensure avatar field exists; default to 0
+                    if (doc.getLong("avatar") == null) {
+                        updates["avatar"] = 0
                     }
 
                     if (updates.isNotEmpty()) {

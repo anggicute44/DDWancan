@@ -45,7 +45,7 @@ fun FavoriteScreen() {
     Scaffold(
         topBar = { FavoriteTopBar() },
         bottomBar = { BottomNavigationBar(NavRoutes.FAVORITE) },
-        containerColor = Color.White
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         FavoriteContent(
             modifier = Modifier.padding(padding)
@@ -62,18 +62,18 @@ fun FavoriteTopBar() {
     CenterAlignedTopAppBar(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Newspaper, contentDescription = null, tint = Color.White)
+                Icon(Icons.Default.Newspaper, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
                 Spacer(Modifier.width(6.dp))
                 Text(
                     text = "D’Wacana",
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = Color(0xFF2678FF)
+            containerColor = MaterialTheme.colorScheme.primary
         )
     )
 }
@@ -98,14 +98,14 @@ fun FavoriteContent(modifier: Modifier = Modifier, viewModel: FavoriteViewModel 
 
         item {
             Spacer(Modifier.height(16.dp))
-            Text("Artikel Tersimpan", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            Text("Daftar berita favoritmu", fontSize = 14.sp, color = Color.Gray)
+            Text("Artikel Tersimpan", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+            Text("Daftar berita favoritmu", fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
             Spacer(Modifier.height(12.dp))
         }
 
         if (favorites.isEmpty()) {
             item {
-                Text("Belum ada artikel favorit", color = Color.Gray, modifier = Modifier.padding(8.dp))
+                Text("Belum ada artikel favorit", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), modifier = Modifier.padding(8.dp))
             }
         } else {
             items(favorites) { article ->
@@ -124,7 +124,7 @@ fun FavoriteCard(article: Article) {
     Surface(
         shape = RoundedCornerShape(12.dp),
         shadowElevation = 4.dp,
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
@@ -150,31 +150,32 @@ fun FavoriteCard(article: Article) {
                 painterResource(R.drawable.news)
             }
 
-            Image(
+                Image(
                 painter = painter,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(80.dp)
-                    .background(Color.LightGray, RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp))
             )
 
             Spacer(Modifier.width(12.dp))
 
             Column(Modifier.weight(1f)) {
-                Text(article.title, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                Text(article.description ?: "", maxLines = 2, fontSize = 13.sp)
+                Text(article.title, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurface)
+                Text(article.description ?: "", maxLines = 2, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                 Spacer(Modifier.height(6.dp))
                 Text(
                     article.publishedAt,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             }
 
             Icon(
                 imageVector = Icons.Default.Favorite,
                 contentDescription = null,
-                tint = Color.Red
+                tint = MaterialTheme.colorScheme.error
             )
         }
     }

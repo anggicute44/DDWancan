@@ -1,5 +1,6 @@
 package id.app.ddwancan.view.screen.admin
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -41,15 +42,16 @@ fun ManageUsersScreen(
     ) { padding ->
         if (userList.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
+                modifier = Modifier.fillMaxSize().padding(padding).background(MaterialTheme.colorScheme.background),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Belum ada data user.", color = Color.Gray)
+                Text("Belum ada data user.", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
             }
         } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
                     .padding(padding)
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -66,7 +68,7 @@ fun ManageUsersScreen(
 fun UserItemCard(user: UserItem, onDelete: () -> Unit) {
     Card(
         elevation = CardDefaults.cardElevation(2.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier
@@ -80,13 +82,13 @@ fun UserItemCard(user: UserItem, onDelete: () -> Unit) {
                     imageVector = Icons.Default.Person,
                     contentDescription = null,
                     modifier = Modifier.size(40.dp),
-                    tint = Color.Gray
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
-                    Text(text = user.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Text(text = user.email, fontSize = 14.sp, color = Color.Gray)
-                    Text(text = "UID: ${user.uid.take(5)}...", fontSize = 12.sp, color = Color.LightGray)
+                    Text(text = user.name, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
+                    Text(text = user.email, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                    Text(text = "UID: ${user.uid.take(5)}...", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 }
             }
 

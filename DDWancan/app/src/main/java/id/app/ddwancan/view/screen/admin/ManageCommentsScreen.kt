@@ -1,5 +1,6 @@
 package id.app.ddwancan.view.screen.admin
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -43,15 +44,16 @@ fun ManageCommentsScreen(
     ) { padding ->
         if (commentList.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
+                modifier = Modifier.fillMaxSize().padding(padding).background(MaterialTheme.colorScheme.background),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Belum ada komentar.", color = Color.Gray)
+                Text("Belum ada komentar.", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
             }
         } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
                     .padding(padding)
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -61,7 +63,7 @@ fun ManageCommentsScreen(
                 grouped.forEach { (articleUrl, listPairs) ->
                     // Article header
                     item {
-                        Text(text = "Berita: ${articleUrl.take(50)}", fontWeight = FontWeight.SemiBold)
+                        Text(text = "Berita: ${articleUrl.take(50)}", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground)
                         Spacer(modifier = Modifier.height(6.dp))
                     }
 
@@ -90,7 +92,7 @@ fun AdminCommentItem(comment: Comment, onDelete: () -> Unit) {
 
     Card(
         elevation = CardDefaults.cardElevation(2.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier
@@ -101,7 +103,7 @@ fun AdminCommentItem(comment: Comment, onDelete: () -> Unit) {
             Icon(
                 imageVector = Icons.Default.Person,
                 contentDescription = null,
-                tint = Color.Gray,
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
@@ -116,12 +118,12 @@ fun AdminCommentItem(comment: Comment, onDelete: () -> Unit) {
                     text = comment.komentar,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = dateString,
                     fontSize = 10.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             }
             Row {
