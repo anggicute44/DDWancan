@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "919263438218",
+    "project_id": "ddwacan-app",
+    "storage_bucket": "ddwacan-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:919263438218:android:fbd42ef71d7d12e2fa9473",
+        "android_client_info": {
+          "package_name": "id.app.ddwancan"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "919263438218-fqu2lvla9tgs24r1n2ri377us7kng813.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "id.app.ddwancan",
+            "certificate_hash": "2f7ec146c3df4d8dcef795add64c1d1eca72e2c6"
+          }
+        },
+        {
+          "client_id": "919263438218-g0v2cbo0dng9ut49v78v6nd2gsui94au.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "id.app.ddwancan",
+            "certificate_hash": "1a271bab502e57e2a8d2f5549c21ba8ce8b48b72"
+          }
+        },
+        {
+          "client_id": "919263438218-b56n9oorln19tlppe59gc8aiueuregk2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDL644Syfz_zT-pps-tpZnMlNZFFBTccj8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "919263438218-b56n9oorln19tlppe59gc8aiueuregk2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
