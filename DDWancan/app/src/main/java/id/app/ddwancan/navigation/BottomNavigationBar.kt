@@ -14,7 +14,7 @@ fun BottomNavigationBar(currentRoute: NavRoutes) {
 
     val activity = LocalContext.current as Activity
 
-    NavigationBar {
+    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
         NavigationBarItem(
             selected = currentRoute == NavRoutes.HOME,
             onClick = {
@@ -23,8 +23,8 @@ fun BottomNavigationBar(currentRoute: NavRoutes) {
                     activity.finish()
                 }
             },
-            icon = { Icon(Icons.Default.Home, null) },
-            label = { Text("Home") }
+            icon = { Icon(Icons.Default.Home, null, tint = if (currentRoute == NavRoutes.HOME) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) },
+            label = { Text("Home", color = if (currentRoute == NavRoutes.HOME) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) }
         )
 
         NavigationBarItem(
@@ -35,8 +35,8 @@ fun BottomNavigationBar(currentRoute: NavRoutes) {
                     activity.finish()
                 }
             },
-            icon = { Icon(Icons.Default.Search, null) },
-            label = { Text("Search") }
+            icon = { Icon(Icons.Default.Search, null, tint = if (currentRoute == NavRoutes.SEARCH) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) },
+            label = { Text("Search", color = if (currentRoute == NavRoutes.SEARCH) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) }
         )
 
         NavigationBarItem(
@@ -47,8 +47,8 @@ fun BottomNavigationBar(currentRoute: NavRoutes) {
                     activity.finish()
                 }
             },
-            icon = { Icon(Icons.Default.Favorite, null) },
-            label = { Text("Favorite") }
+            icon = { Icon(Icons.Default.Favorite, null, tint = if (currentRoute == NavRoutes.FAVORITE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) },
+            label = { Text("Favorite", color = if (currentRoute == NavRoutes.FAVORITE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) }
         )
 
         NavigationBarItem(
@@ -59,8 +59,8 @@ fun BottomNavigationBar(currentRoute: NavRoutes) {
                     activity.finish()
                 }
             },
-            icon = { Icon(Icons.Default.Person, null) },
-            label = { Text("Profile") }
+            icon = { Icon(Icons.Default.Person, null, tint = if (currentRoute == NavRoutes.PROFILE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) },
+            label = { Text("Profile", color = if (currentRoute == NavRoutes.PROFILE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) }
         )
     }
 }

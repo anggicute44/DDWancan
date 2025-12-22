@@ -37,7 +37,7 @@ fun CommentItem(
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFF5F5F5) // Warna abu-abu muda
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -83,7 +83,7 @@ fun CommentItem(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,
                             modifier = Modifier.size(24.dp),
-                            tint = Color.Gray
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         )
                     }
 
@@ -105,7 +105,7 @@ fun CommentItem(
                     Text(
                         text = dateString,
                         fontSize = 10.sp,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 }
 
@@ -118,7 +118,7 @@ fun CommentItem(
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Hapus Komentar",
-                            tint = Color.Red
+                            tint = MaterialTheme.colorScheme.error
                         )
                     }
                 }
@@ -147,7 +147,7 @@ fun CommentItem(
                         Icon(
                             imageVector = androidx.compose.material.icons.Icons.Default.Warning,
                             contentDescription = "Report",
-                            tint = Color(0xFFFFA000)
+                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.9f)
                         )
                     }
                 }
@@ -159,7 +159,7 @@ fun CommentItem(
             Text(
                 text = comment.komentar,
                 fontSize = 14.sp,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }

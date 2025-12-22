@@ -1,55 +1,41 @@
 package id.app.ddwancan.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 
+// Palet warna untuk Mode Gelap
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-
+    primary = DarkPrimary,           // Biru yang lebih cerah untuk dark mode
+    background = DarkBackground,       // Latar belakang utama (hitam pekat)
+    surface = DarkSurface,           // Warna untuk Card, Surface, dll. (abu-abu gelap)
+    onPrimary = TextLight,           // Teks di atas warna primer (putih)
+    onBackground = TextLight,        // Teks utama di atas background
+    onSurface = TextLight            // Teks di atas surface
 )
 
+// Palet warna untuk Mode Terang
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primary = PrimaryBlue,           // Biru cerah untuk light mode
+    background = Color.White,          // Latar belakang putih
+    surface = LightBlue,             // Warna surface (biru sangat muda)
+    onPrimary = Color.White,           // Teks di atas warna primer (putih)
+    onBackground = TextDark,         // Teks utama di atas background (hitam)
+    onSurface = TextDark             // Teks di atas surface (hitam)
 )
 
 @Composable
 fun DDwancanTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
-    
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+    val colorScheme = if (darkTheme) {
+        DarkColorScheme
+    } else {
+        LightColorScheme
     }
 
     MaterialTheme(

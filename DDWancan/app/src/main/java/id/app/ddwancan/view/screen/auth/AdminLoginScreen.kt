@@ -1,6 +1,7 @@
 package id.app.ddwancan.view.screen.auth
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -34,6 +35,7 @@ fun AdminLoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -62,7 +64,15 @@ fun AdminLoginScreen(
             onValueChange = { username = it },
             label = { Text("Admin Username") },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+            )
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -79,6 +89,14 @@ fun AdminLoginScreen(
 
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+            ),
 
             // 3. Tambahkan Trailing Icon (Icon Mata)
             trailingIcon = {
@@ -96,7 +114,11 @@ fun AdminLoginScreen(
                 val description = if (isPasswordVisible) "Hide Password" else "Show Password"
 
                 IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
-                    Icon(imageVector = iconToShow, contentDescription = description)
+                    Icon(
+                        imageVector = iconToShow,
+                        contentDescription = description,
+                        tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                    )
                 }
             }
         )
@@ -118,7 +140,10 @@ fun AdminLoginScreen(
 
         // --- Link Kembali ke User Login ---
         TextButton(onClick = onBackToUserLogin) {
-            Text("Bukan Admin? Kembali ke Login User")
+            Text(
+                "Bukan Admin? Kembali ke Login User",
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

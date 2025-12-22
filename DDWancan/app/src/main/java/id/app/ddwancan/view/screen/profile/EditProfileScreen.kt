@@ -1,5 +1,6 @@
 package id.app.ddwancan.view.screen.profile
 
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -9,8 +10,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -23,70 +22,56 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import id.app.ddwancan.R
-import id.app.ddwancan.ui.theme.PrimaryBlue
 import id.app.ddwancan.viewmodel.ProfileViewModel
 
-/* ============================================================
-   MAIN EDIT PROFILE SCREEN
-============================================================ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(
     onBackClick: () -> Unit,
     viewModel: ProfileViewModel = viewModel()
-    // Parameter onLogoutClick dihapus
 ) {
     val context = LocalContext.current
 
-    // Mengambil data dari ViewModel
     val nameState = viewModel.name
     val emailState = viewModel.email
     val loading = viewModel.isLoading.value
 
-    // Password tetap kosong karena alasan keamanan (user isi jika ingin ubah)
     var password by remember { mutableStateOf("") }
-    // Old password untuk konfirmasi saat mengganti password
     var oldPassword by remember { mutableStateOf("") }
-    // Confirm new password
     var confirmPassword by remember { mutableStateOf("") }
-    // Selected avatar index (0..7) initialized from ViewModel
     var selectedAvatar by remember { mutableStateOf(viewModel.avatar.value) }
-    // Keep selectedAvatar in sync if ViewModel avatar updates
+
     LaunchedEffect(key1 = viewModel.avatar.value) {
         selectedAvatar = viewModel.avatar.value
     }
 
     Scaffold(
         topBar = { EditProfileTopBar(onBackClick) },
-        containerColor = Color.White
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         if (loading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = PrimaryBlue)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
             EditProfileContent(
                 modifier = Modifier
                     .padding(innerPadding)
-                    .verticalScroll(rememberScrollState()), // Agar bisa discroll
+                    .verticalScroll(rememberScrollState()),
                 name = nameState.value,
                 onNameChange = { nameState.value = it },
-                email = emailState.value, // Email biasanya read-only, tapi di sini editable
+                email = emailState.value,
                 onEmailChange = { emailState.value = it },
                 password = password,
                 onPasswordChange = { password = it },
@@ -106,11 +91,9 @@ fun EditProfileScreen(
                     ) { success, message ->
                         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                         if (success) {
-                            // Optionally navigate back or refresh data
+                            onBackClick() // Kembali jika sukses
                         }
                     }
-
-
                 },
                 onCancelClick = onBackClick
             )
@@ -118,9 +101,6 @@ fun EditProfileScreen(
     }
 }
 
-/* ============================================================
-   TOP APP BAR
-============================================================ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileTopBar(onBackClick: () -> Unit) {
@@ -130,7 +110,7 @@ fun EditProfileTopBar(onBackClick: () -> Unit) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint = Color.White
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
         },
@@ -139,18 +119,15 @@ fun EditProfileTopBar(onBackClick: () -> Unit) {
                 text = "Edit Profil",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onPrimary
             )
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = PrimaryBlue
+            containerColor = MaterialTheme.colorScheme.primary
         )
     )
 }
 
-/* ============================================================
-   EDIT PROFILE CONTENT
-============================================================ */
 @Composable
 fun EditProfileContent(
     modifier: Modifier = Modifier,
@@ -169,8 +146,8 @@ fun EditProfileContent(
     onSaveClick: () -> Unit,
     onCancelClick: () -> Unit
 ) {
-
     val showDialog = remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     if (showDialog.value) {
         ConfirmationDialog(
@@ -183,6 +160,7 @@ fun EditProfileContent(
             }
         )
     }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -192,20 +170,26 @@ fun EditProfileContent(
 
         Spacer(Modifier.height(30.dp))
 
-        // Avatar Section (show current)
         ProfileAvatarSection(userName = name, avatarIndex = selectedAvatar)
 
         Spacer(Modifier.height(16.dp))
 
-        // Avatar selection grid (8 avatars)
-        val ctx = LocalContext.current
-        Text(text = "Pilih Avatar:", modifier = Modifier.fillMaxWidth(), color = Color.Gray)
+        Text(
+            text = "Pilih Avatar:",
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+        )
         Spacer(Modifier.height(8.dp))
+
+        // Avatar selection grid (8 avatars)
         Column(modifier = Modifier.fillMaxWidth()) {
             for (rowStart in listOf(0, 4)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     for (i in rowStart until rowStart + 4) {
-                        val resId = ctx.resources.getIdentifier("avatar$i", "drawable", ctx.packageName)
+                        val resId = context.resources.getIdentifier("avatar$i", "drawable", context.packageName)
                         val painter = if (resId != 0) painterResource(id = resId) else painterResource(id = R.drawable.ic_launcher_foreground)
                         Image(
                             painter = painter,
@@ -213,7 +197,11 @@ fun EditProfileContent(
                             modifier = Modifier
                                 .size(64.dp)
                                 .clip(CircleShape)
-                                .border(if (selectedAvatar == i) 2.dp else 1.dp, if (selectedAvatar == i) PrimaryBlue else Color.Gray, CircleShape)
+                                .border(
+                                    width = if (selectedAvatar == i) 2.dp else 1.dp,
+                                    color = if (selectedAvatar == i) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                                    shape = CircleShape
+                                )
                                 .clickable { onSelectedAvatarChange(i) },
                             contentScale = ContentScale.Crop
                         )
@@ -225,75 +213,27 @@ fun EditProfileContent(
 
         Spacer(Modifier.height(40.dp))
 
-        // Input Name
-        ProfileInputRow(
-            label = "Name :",
-            value = name,
-            onValueChange = onNameChange,
-            icon = Icons.Outlined.Person
-        )
-
+        ProfileInputRow(label = "Name :", value = name, onValueChange = onNameChange, icon = Icons.Outlined.Person)
         Spacer(Modifier.height(24.dp))
-
-        // Input Email
-        ProfileInputRow(
-            label = "Email :",
-            value = email,
-            onValueChange = onEmailChange,
-            icon = Icons.Outlined.Email,
-            keyboardType = KeyboardType.Email
-        )
-
+        ProfileInputRow(label = "Email :", value = email, onValueChange = onEmailChange, icon = Icons.Outlined.Email, keyboardType = KeyboardType.Email)
         Spacer(Modifier.height(24.dp))
-
-        // Password fields: Old, New, Confirm (user enters old password to confirm change)
-        ProfileInputRow(
-            label = "Current Password :",
-            value = oldPassword,
-            onValueChange = onOldPasswordChange,
-            icon = Icons.Outlined.Lock,
-            keyboardType = KeyboardType.Password,
-            visualTransformation = PasswordVisualTransformation(),
-            placeholder = "Masukkan kata sandi lama"
-        )
-
+        ProfileInputRow(label = "Current Password :", value = oldPassword, onValueChange = onOldPasswordChange, icon = Icons.Outlined.Lock, keyboardType = KeyboardType.Password, visualTransformation = PasswordVisualTransformation(), placeholder = "Masukkan kata sandi lama")
         Spacer(Modifier.height(12.dp))
-
-        ProfileInputRow(
-            label = "New Password (Optional) :",
-            value = password,
-            onValueChange = onPasswordChange,
-            icon = Icons.Outlined.Lock,
-            keyboardType = KeyboardType.Password,
-            visualTransformation = PasswordVisualTransformation(),
-            placeholder = "******"
-        )
-
+        ProfileInputRow(label = "New Password (Optional) :", value = password, onValueChange = onPasswordChange, icon = Icons.Outlined.Lock, keyboardType = KeyboardType.Password, visualTransformation = PasswordVisualTransformation(), placeholder = "******")
         Spacer(Modifier.height(12.dp))
-
-        ProfileInputRow(
-            label = "Confirm New Password :",
-            value = confirmPassword,
-            onValueChange = onConfirmPasswordChange,
-            icon = Icons.Outlined.Lock,
-            keyboardType = KeyboardType.Password,
-            visualTransformation = PasswordVisualTransformation(),
-            placeholder = "Konfirmasi kata sandi baru"
-        )
+        ProfileInputRow(label = "Confirm New Password :", value = confirmPassword, onValueChange = onConfirmPasswordChange, icon = Icons.Outlined.Lock, keyboardType = KeyboardType.Password, visualTransformation = PasswordVisualTransformation(), placeholder = "Konfirmasi kata sandi baru")
 
         Spacer(Modifier.height(40.dp))
 
-        // Action Buttons (Logout removed from here)
-        val ctx2 = LocalContext.current
         ActionButtons(
             onSimpanClick = {
                 var canSave = true
                 if (password.isNotEmpty()) {
                     if (oldPassword.isEmpty()) {
-                        Toast.makeText(ctx2, "Masukkan kata sandi lama", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Masukkan kata sandi lama", Toast.LENGTH_SHORT).show()
                         canSave = false
                     } else if (password != confirmPassword) {
-                        Toast.makeText(ctx2, "Kata sandi baru tidak cocok", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Kata sandi baru tidak cocok", Toast.LENGTH_SHORT).show()
                         canSave = false
                     }
                 }
@@ -306,10 +246,6 @@ fun EditProfileContent(
     }
 }
 
-
-/* ============================================================
-   CONFIRMATION DIALOG
-============================================================ */
 @Composable
 fun ConfirmationDialog(
     onConfirm: () -> Unit,
@@ -317,77 +253,46 @@ fun ConfirmationDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = "Konfirmasi Perubahan",
-                fontWeight = FontWeight.SemiBold
-            )
-        },
-        text = {
-            Text("Apakah Anda yakin ingin simpan perubahan profile?")
-        },
+        title = { Text("Konfirmasi Perubahan", fontWeight = FontWeight.SemiBold) },
+        text = { Text("Apakah Anda yakin ingin simpan perubahan profile?") },
         confirmButton = {
             Button(
                 onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text("Simpan", color = Color.White)
+                Text("Simpan", color = MaterialTheme.colorScheme.onPrimary)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Batal", color = Color.Gray)
+                Text("Batal", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
             }
         },
         shape = RoundedCornerShape(12.dp)
     )
 }
 
-/* ============================================================
-   AVATAR SECTION
-============================================================ */
 @Composable
 fun ProfileAvatarSection(userName: String, avatarIndex: Int = 0) {
+    val context = LocalContext.current
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        // Use selected avatar resource if exists
-        val ctx = LocalContext.current
-        val resId = ctx.resources.getIdentifier("avatar$avatarIndex", "drawable", ctx.packageName)
+        val resId = context.resources.getIdentifier("avatar$avatarIndex", "drawable", context.packageName)
         val painter = if (resId != 0) painterResource(id = resId) else painterResource(id = R.drawable.ic_launcher_foreground)
         Image(
             painter = painter,
-            contentDescription = "Profile Pic",
+            contentDescription = "Current Avatar",
             modifier = Modifier
-                .size(100.dp)
+                .size(110.dp)
                 .clip(CircleShape)
-                .background(Color.LightGray)
-                .border(1.dp, Color.Gray, CircleShape),
+                .background(MaterialTheme.colorScheme.surface)
+                .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape),
             contentScale = ContentScale.Crop
         )
-
-        Spacer(Modifier.height(12.dp))
-
-        Text(
-            text = userName.ifEmpty { "User" },
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 16.sp,
-            color = Color.Black
-        )
-
         Spacer(Modifier.height(8.dp))
-
-        Text(
-            text = "Change Image",
-            color = PrimaryBlue,
-            fontSize = 14.sp,
-            textDecoration = TextDecoration.Underline,
-            modifier = Modifier.clickable { /* TODO: Handle change image */ }
-        )
+        Text(text = userName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
     }
 }
 
-/* ============================================================
-   CUSTOM INPUT ROW
-============================================================ */
 @Composable
 fun ProfileInputRow(
     label: String,
@@ -395,96 +300,48 @@ fun ProfileInputRow(
     onValueChange: (String) -> Unit,
     icon: ImageVector,
     keyboardType: KeyboardType = KeyboardType.Text,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
+    visualTransformation: androidx.compose.ui.text.input.VisualTransformation = androidx.compose.ui.text.input.VisualTransformation.None,
     placeholder: String = ""
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(30.dp),
-                tint = Color.Black
+        Text(label, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+        Spacer(Modifier.height(4.dp))
+        TextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            leadingIcon = { Icon(icon, contentDescription = null) },
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = keyboardType),
+            visualTransformation = visualTransformation,
+            placeholder = { Text(placeholder) },
+            singleLine = true,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent
             )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = label,
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Box {
-                    if (value.isEmpty() && placeholder.isNotEmpty()) {
-                        Text(text = placeholder, color = Color.LightGray, fontSize = 16.sp)
-                    }
-                    BasicTextField(
-                        value = value,
-                        onValueChange = onValueChange,
-                        textStyle = TextStyle(
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.Black
-                        ),
-                        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-                        visualTransformation = visualTransformation,
-                        cursorBrush = SolidColor(PrimaryBlue),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        HorizontalDivider(
-            thickness = 1.dp,
-            color = Color.LightGray
         )
     }
 }
 
-/* ============================================================
-   ACTION BUTTONS (Hanya Simpan & Batal)
-============================================================ */
 @Composable
-fun ActionButtons(
-    onSimpanClick: () -> Unit,
-    onBatalClick: () -> Unit
-) {
-    val buttonModifier = Modifier
-        .fillMaxWidth()
-        .height(50.dp)
-
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.padding(horizontal = 20.dp)
+fun ActionButtons(onSimpanClick: () -> Unit, onBatalClick: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Tombol SIMPAN
+        OutlinedButton(onClick = onBatalClick, modifier = Modifier.weight(1f)) {
+            Text("Batal")
+        }
         Button(
             onClick = onSimpanClick,
-            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-            modifier = buttonModifier,
-            shape = RoundedCornerShape(8.dp)
+            modifier = Modifier.weight(1f),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
-            Text("SIMPAN", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.White)
-        }
-
-        // Tombol BATAL
-        Button(
-            onClick = onBatalClick,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE0E0E0)),
-            modifier = buttonModifier,
-            shape = RoundedCornerShape(8.dp),
-        ) {
-            Text("BATAL", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.Gray)
+            Text("Simpan", color = MaterialTheme.colorScheme.onPrimary)
         }
     }
 }

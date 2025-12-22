@@ -172,11 +172,11 @@ fun HomeTopBar(onFilterClick: () -> Unit) {
         },
         actions = {
             IconButton(onClick = onFilterClick) {
-                Icon(imageVector = Icons.Default.Search, contentDescription = "Filter")
+                Icon(imageVector = Icons.Default.Search, contentDescription = "Filter", tint = MaterialTheme.colorScheme.onPrimary)
             }
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.primary
         )
     )
 }
@@ -247,14 +247,14 @@ fun CategoryChip(
     onClick: () -> Unit
 ) {
     Surface(
-        color = if (selected) Color(0xFF2678FF) else Color(0xFFEFF3FF),
+        color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
         shape = RoundedCornerShape(20.dp),
         modifier = Modifier.clickable { onClick() }
     ) {
         Text(
             text = text,
             fontSize = 14.sp,
-            color = if (selected) Color.White else Color(0xFF2678FF),
+            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
         )
@@ -276,7 +276,7 @@ fun ApiNewsCard(
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         shadowElevation = 4.dp,
-        color = Color.White
+        color = MaterialTheme.colorScheme.surface
     ) {
         Row(
             modifier = Modifier.padding(10.dp),
@@ -291,16 +291,16 @@ fun ApiNewsCard(
                 contentDescription = null,
                 modifier = Modifier
                     .size(80.dp)
-                    .background(Color.LightGray, RoundedCornerShape(10.dp)),
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp)),
                 contentScale = ContentScale.Crop
             )
 
             Spacer(Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(article.title, fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 2)
+                Text(article.title, fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 2, color = MaterialTheme.colorScheme.onSurface)
                 article.description?.let {
-                    Text(it, maxLines = 2, fontSize = 13.sp)
+                    Text(it, maxLines = 2, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                 }
             }
         }
@@ -313,8 +313,8 @@ fun ApiNewsCard(
 @Composable
 fun HomeBottomBar(context: android.content.Context) {
     Column {
-        HorizontalDivider(color = Color(0xFFE0E0E0))
-        NavigationBar(containerColor = Color.White) {
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+        NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
 
             NavItem(Icons.Default.Home, "Home", true) {}
 
@@ -345,12 +345,12 @@ fun RowScope.NavItem(
         onClick = onClick,
         icon = { Icon(icon, contentDescription = label) },
         label = { Text(label) },
-        colors = NavigationBarItemDefaults.colors(
-            selectedIconColor = Color(0xFF2678FF),
-            unselectedIconColor = Color.Gray,
-            selectedTextColor = Color(0xFF2678FF),
-            unselectedTextColor = Color.Gray,
-            indicatorColor = Color.White
-        )
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    indicatorColor = MaterialTheme.colorScheme.secondaryContainer
+                )
     )
 }

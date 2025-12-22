@@ -3,6 +3,7 @@ package id.app.ddwancan.view.screen.detail
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -71,20 +72,23 @@ fun ArticleDetailScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Detail Berita") },
+                title = { Text("Detail Berita", color = MaterialTheme.colorScheme.onPrimary) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = MaterialTheme.colorScheme.onPrimary)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         LazyColumn(
             state = listState, // Pasang state scroll di sini
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 16.dp)
         ) {
             // KONTEN ARTIKEL
@@ -99,20 +103,20 @@ fun ArticleDetailScreen(
                     )
                     Spacer(Modifier.height(12.dp))
                 }
-                Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                 Spacer(Modifier.height(8.dp))
                 // Tampilkan author & publishedAt jika ada
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-                    if (!author.isNullOrBlank()) {
-                        Text(text = "By: $author", style = MaterialTheme.typography.bodySmall)
+                        if (!author.isNullOrBlank()) {
+                            Text(text = "By: $author", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.9f))
                         Spacer(Modifier.width(12.dp))
                     }
                     if (!publishedAt.isNullOrBlank()) {
-                        Text(text = "Published: ${publishedAt}", style = MaterialTheme.typography.bodySmall)
+                            Text(text = "Published: ${publishedAt}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.9f))
                     }
                 }
                 Spacer(Modifier.height(12.dp))
-                Text(text = content, style = MaterialTheme.typography.bodyMedium)
+                Text(text = content, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onBackground)
                 Spacer(Modifier.height(24.dp))
             }
 
@@ -123,10 +127,10 @@ fun ArticleDetailScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     OutlinedButton(onClick = {}, enabled = false) {
-                        Icon(Icons.Outlined.Comment, null)
-                        Spacer(Modifier.width(6.dp))
-                        Text("Comment")
-                    }
+                            Icon(Icons.Outlined.Comment, null, tint = MaterialTheme.colorScheme.onSurface)
+                            Spacer(Modifier.width(6.dp))
+                            Text("Comment", color = MaterialTheme.colorScheme.onSurface)
+                        }
                     // Favorite button
                     val isFav by detailViewModel.isFavorited
                     val favCount by detailViewModel.favoritesCount
@@ -142,10 +146,11 @@ fun ArticleDetailScreen(
                         )
                     }) {
                         Icon(if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, null,
-                            tint = if (isFav) MaterialTheme.colorScheme.primary else Color.Unspecified)
+                            tint = if (isFav) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                         Spacer(Modifier.width(6.dp))
-                        Text("$favCount")
+                        Text("$favCount", color = MaterialTheme.colorScheme.onSurface)
                     }
+
                     OutlinedButton(
                         onClick = {
                             val shareIntent = Intent(Intent.ACTION_SEND).apply {
@@ -155,18 +160,18 @@ fun ArticleDetailScreen(
                             context.startActivity(Intent.createChooser(shareIntent, "Share via"))
                         }
                     ) {
-                        Icon(Icons.Outlined.Share, null)
+                        Icon(Icons.Outlined.Share, null, tint = MaterialTheme.colorScheme.onSurface)
                         Spacer(Modifier.width(6.dp))
-                        Text("Share")
+                        Text("Share", color = MaterialTheme.colorScheme.onSurface)
                     }
                 }
                 Spacer(Modifier.height(24.dp))
-                HorizontalDivider()
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline)
                 Spacer(Modifier.height(16.dp))
             }
 
             // BAGIAN JUDUL KOMENTAR
-            item { Text("Comments", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
+            item { Text("Comments", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground) }
             item { Spacer(Modifier.height(8.dp)) }
 
             // --- 2. LIST KOMENTAR ---
@@ -175,7 +180,7 @@ fun ArticleDetailScreen(
                 item {
                     Text(
                         "Belum ada komentar",
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                 }
@@ -215,7 +220,20 @@ fun ArticleDetailScreen(
                         value = commentText,
                         onValueChange = { commentText = it },
                         modifier = Modifier.weight(1f),
-                        placeholder = { Text("Tulis komentar...") }
+                        placeholder = { Text("Tulis komentar...") },
+                        shape = MaterialTheme.shapes.small,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.outline,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            focusedLeadingIconColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                        )
                     )
                     Spacer(Modifier.width(8.dp))
                     IconButton(

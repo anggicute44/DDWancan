@@ -83,6 +83,7 @@ dependencies {
     // --- IMAGE LOADING (Coil for Compose) ---
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation(libs.androidx.benchmark.traceprocessor)
+    implementation(libs.androidx.compose.foundation)
 
     // --- TESTING & DEBUGGING ---
     testImplementation("junit:junit:4.13.2")
