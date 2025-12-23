@@ -32,7 +32,7 @@ Secara keseluruhan, aplikasi ini bertujuan menjadi pusat informasi kampus yang t
 
 71231005 Josephine Marcelia  
 
-71220918 Yessa  
+71220916 Yessa  
 
 
 
