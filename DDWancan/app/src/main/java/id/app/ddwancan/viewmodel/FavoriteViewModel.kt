@@ -44,24 +44,30 @@ class FavoriteViewModel(application: Application) : AndroidViewModel(application
 		}
 	}
 
-	fun addFavorite(articleUrl: String, onDone: () -> Unit = {}) {
+	fun addFavorite(article: Article, onDone: () -> Unit = {}) {
 		val uid = UserSession.userId ?: return
 		viewModelScope.launch {
 			try {
-				// Insert local favorite immediately for instant UI feedback
+				// Insert local favorite immediately for instant UI feedback with full article data
 				try {
 					dbLocal.favoriteDao().insertFavorite(
-						id.app.ddwancan.data.local.room.FavoriteEntity(url = articleUrl, title = null, description = null, urlToImage = null, publishedAt = null)
+						id.app.ddwancan.data.local.room.FavoriteEntity(
+							url = article.url,
+							title = article.title,
+							description = article.description,
+							urlToImage = article.urlToImage,
+							publishedAt = article.publishedAt
+						)
 					)
 				} catch (_: Exception) {}
 
 				val pendingId = dbLocal.pendingFavoriteDao().insertPendingFavorite(
-					PendingFavoriteEntity(articleUrl = articleUrl, userId = uid, action = "add")
+					PendingFavoriteEntity(articleUrl = article.url, userId = uid, action = "add")
 				)
 
 				val data = hashMapOf(
 					"user_id" to uid,
-					"article_url" to articleUrl,
+					"article_url" to article.url,
 					"created_at" to com.google.firebase.firestore.FieldValue.serverTimestamp()
 				)
 

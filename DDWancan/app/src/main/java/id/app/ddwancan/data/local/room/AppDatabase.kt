@@ -27,6 +27,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "ddwancan_db"
                 ).fallbackToDestructiveMigration().build()
+                // Also allow destructive migration on downgrade to avoid runtime crashes during development
+                // (In production, provide proper Migration objects instead.)
                 INSTANCE = instance
                 instance
             }

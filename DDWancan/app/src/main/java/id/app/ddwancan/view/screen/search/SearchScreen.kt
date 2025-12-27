@@ -140,7 +140,7 @@ fun SearchContent(modifier: Modifier = Modifier, viewModel: NewsViewModel = view
                 }
                 context.startActivity(intent)
             }, isFavorited = favVm.favorites.value.any { it.url == article.url }, onFavorite = {
-                if (favVm.favorites.value.any { it.url == article.url }) favVm.removeFavorite(article.url) else favVm.addFavorite(article.url)
+                if (favVm.favorites.value.any { it.url == article.url }) favVm.removeFavorite(article.url) else favVm.addFavorite(article)
             })
         }
     }

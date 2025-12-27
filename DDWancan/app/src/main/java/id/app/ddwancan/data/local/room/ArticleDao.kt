@@ -16,4 +16,7 @@ interface ArticleDao {
 
     @Query("DELETE FROM articles")
     suspend fun clearAll()
+
+    @Query("UPDATE articles SET favoritesCount = :count WHERE url = :url")
+    suspend fun updateFavoritesCount(url: String, count: Int)
 }

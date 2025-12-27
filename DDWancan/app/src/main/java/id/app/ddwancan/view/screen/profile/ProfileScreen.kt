@@ -54,7 +54,7 @@ fun ProfileScreen(
 
     Scaffold(
         topBar = { ProfileTopBar(isEnglish) },
-        bottomBar = { ProfileBottomBar(isEnglish) },
+        bottomBar = { id.app.ddwancan.navigation.BottomNavigationBar(id.app.ddwancan.navigation.NavRoutes.PROFILE) },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         if (isLoading) {
@@ -299,55 +299,4 @@ fun LogoutButton(onLogoutClick: () -> Unit, isEnglish: Boolean = false) {
     }
 }
 
-@Composable
-fun ProfileBottomBar(isEnglish: Boolean = false) {
-    Column {
-        HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
-        val context = LocalContext.current
-
-        NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-            NavigationBarItem(
-                icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                label = { Text(if (isEnglish) "Home" else "Beranda") },
-                selected = false,
-                onClick = {
-                    val intent = Intent(context, HomeActivity::class.java)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    context.startActivity(intent)
-                }
-            )
-
-            NavigationBarItem(
-                icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-                label = { Text(if (isEnglish) "Search" else "Pencarian") },
-                selected = false,
-                onClick = {
-                    val intent = Intent(context, SearchActivity::class.java)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    context.startActivity(intent)
-                }
-            )
-
-            NavigationBarItem(
-                icon = { Icon(Icons.Default.Favorite, contentDescription = "Favorite") },
-                label = { Text(if (isEnglish) "Favorite" else "Favorit") },
-                selected = false,
-                onClick = {
-                    val intent = Intent(context, FavoriteActivity::class.java)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    context.startActivity(intent)
-                }
-            )
-            NavigationBarItem(
-                icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-                label = { Text(if (isEnglish) "Profile" else "Profil") },
-                selected = true,
-                onClick = {},
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
-                    selectedIconColor = MaterialTheme.colorScheme.primary
-                )
-            )
-        }
-    }
-}
+/* Bottom navigation moved to `navigation/BottomNavigationBar.kt` */

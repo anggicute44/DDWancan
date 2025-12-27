@@ -74,6 +74,10 @@ class ArticleDetailViewModel(application: Application) : AndroidViewModel(applic
 					isFavorited.value = false
 					// optimistic decrement so UI shows change while offline
 					favoritesCount.value = (favoritesCount.value - 1).coerceAtLeast(0)
+					// persist optimistic count to local articles table so list reflects change
+					viewModelScope.launch {
+						try { dbLocal.articleDao().updateFavoritesCount(articleUrl, favoritesCount.value) } catch (_: Exception) {}
+					}
 					val docId = ArticleUtils.docIdFromUrl(articleUrl)
 					try {
 						// attempt to delete user's favorite doc and update News counters
@@ -113,6 +117,10 @@ class ArticleDetailViewModel(application: Application) : AndroidViewModel(applic
 					isFavorited.value = true
 					// optimistic increment so UI shows change while offline
 					favoritesCount.value = favoritesCount.value + 1
+					// persist optimistic count to local articles table so list reflects change
+					viewModelScope.launch {
+						try { dbLocal.articleDao().updateFavoritesCount(articleUrl, favoritesCount.value) } catch (_: Exception) {}
+					}
 
 					val pending = PendingFavoriteEntity(articleUrl = articleUrl, userId = userId, action = "add")
 					dbLocal.pendingFavoriteDao().insertPendingFavorite(pending)

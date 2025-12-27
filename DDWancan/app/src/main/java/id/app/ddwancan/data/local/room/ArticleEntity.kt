@@ -15,4 +15,6 @@ data class ArticleEntity(
     @ColumnInfo(name = "publishedAt") val publishedAt: String?,
     @ColumnInfo(name = "source_id") val sourceId: String?,
     @ColumnInfo(name = "source_name") val sourceName: String?
+    ,
+    @ColumnInfo(name = "favoritesCount") val favoritesCount: Int = 0
 )

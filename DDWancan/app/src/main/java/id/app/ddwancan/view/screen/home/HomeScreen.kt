@@ -163,7 +163,7 @@ fun HomeScreen(
                             if (favoriteViewModel.favorites.value.any { it.url == article.url }) {
                                 favoriteViewModel.removeFavorite(article.url)
                             } else {
-                                favoriteViewModel.addFavorite(article.url)
+                                favoriteViewModel.addFavorite(article)
                             }
                         })
                     }
@@ -359,54 +359,4 @@ fun ApiNewsCard(
     }
 }
 
-/* ============================================================
-   BOTTOM NAVIGATION
-============================================================ */
-@Composable
-fun HomeBottomBar(context: android.content.Context) {
-    val ctx = LocalContext.current
-    val settings = remember { SettingsPreference(ctx) }
-    val isEnglish by settings.isEnglish.collectAsState(initial = false)
-
-    Column {
-        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-        NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-
-            NavItem(Icons.Default.Home, if (isEnglish) "Home" else "Beranda", true) {}
-
-            NavItem(Icons.Default.Search, if (isEnglish) "Search" else "Pencarian") {
-                context.startActivity(Intent(context, SearchActivity::class.java))
-            }
-
-            NavItem(Icons.Default.Favorite, if (isEnglish) "Favorite" else "Favorit") {
-                context.startActivity(Intent(context, FavoriteActivity::class.java))
-            }
-
-            NavItem(Icons.Default.Person, if (isEnglish) "Profile" else "Profil") {
-                context.startActivity(Intent(context, ProfileActivity::class.java))
-            }
-        }
-    }
-}
-
-@Composable
-fun RowScope.NavItem(
-    icon: ImageVector,
-    label: String,
-    selected: Boolean = false,
-    onClick: () -> Unit
-) {
-    NavigationBarItem(
-        selected = selected,
-        onClick = onClick,
-        icon = { Icon(icon, contentDescription = label) },
-        label = { Text(label) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    indicatorColor = MaterialTheme.colorScheme.secondaryContainer
-                )
-    )
-}
+/* Bottom navigation is centralized in `navigation/BottomNavigationBar.kt` */

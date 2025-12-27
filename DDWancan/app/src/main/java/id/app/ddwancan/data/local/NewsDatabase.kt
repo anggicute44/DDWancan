@@ -26,7 +26,7 @@ abstract class NewsDatabase : RoomDatabase() {
                     context.applicationContext,
                     NewsDatabase::class.java,
                     "news_database" // Nama file database di HP user
-                ).build()
+                ).fallbackToDestructiveMigration().build()
                 INSTANCE = instance
                 instance
             }

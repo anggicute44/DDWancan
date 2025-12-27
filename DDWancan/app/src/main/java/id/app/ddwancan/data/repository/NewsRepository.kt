@@ -37,6 +37,7 @@ class NewsRepository(private val context: Context) {
             val url = doc.getString("url") ?: return@mapNotNull null
             val urlToImage = doc.getString("urlToImage")
             val publishedAt = doc.getString("publishedAt") ?: ""
+            val favoritesCount = (doc.getLong("favoritesCount")?.toInt() ?: 0)
 
             ArticleEntity(
                 url = url,
@@ -47,6 +48,7 @@ class NewsRepository(private val context: Context) {
                 publishedAt = publishedAt,
                 sourceId = sourceId,
                 sourceName = sourceName
+                ,favoritesCount = favoritesCount
             )
         }
 
@@ -126,6 +128,7 @@ private fun ArticleEntity.toModel(): Article {
         description = this.description,
         url = this.url,
         urlToImage = this.urlToImage,
-        publishedAt = this.publishedAt ?: ""
+        publishedAt = this.publishedAt ?: "",
+        favoritesCount = this.favoritesCount
     )
 }
