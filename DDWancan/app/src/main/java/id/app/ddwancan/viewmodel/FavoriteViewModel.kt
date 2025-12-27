@@ -1,14 +1,20 @@
 package id.app.ddwancan.viewmodel
 
+import android.app.Application
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
+import id.app.ddwancan.data.local.room.AppDatabase
+import id.app.ddwancan.data.local.room.PendingFavoriteEntity
 import id.app.ddwancan.data.model.Article
 import id.app.ddwancan.data.utils.UserSession
+import kotlinx.coroutines.launch
 
-class FavoriteViewModel : ViewModel() {
+class FavoriteViewModel(application: Application) : AndroidViewModel(application) {
 	private val db = FirebaseFirestore.getInstance()
+	private val dbLocal = AppDatabase.getInstance(application)
 
 	private val _favorites = mutableStateOf<List<Article>>(emptyList())
 	val favorites: State<List<Article>> = _favorites
@@ -52,5 +58,36 @@ class FavoriteViewModel : ViewModel() {
 				_error.value = e.message
 				_isLoading.value = false
 			}
+	}
+
+	fun addFavorite(articleUrl: String, onDone: () -> Unit = {}) {
+		val uid = UserSession.userId ?: return
+		viewModelScope.launch {
+			try {
+				val pendingId = dbLocal.pendingFavoriteDao().insertPendingFavorite(
+					PendingFavoriteEntity(articleUrl = articleUrl, userId = uid)
+				)
+
+				val data = hashMapOf(
+					"user_id" to uid,
+					"article_url" to articleUrl,
+					"created_at" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+				)
+
+				db.collection("Favorite").add(data)
+					.addOnSuccessListener {
+						viewModelScope.launch {
+							try { dbLocal.pendingFavoriteDao().markAsSynced(pendingId) } catch (_: Exception) {}
+						}
+						onDone()
+					}
+					.addOnFailureListener { e ->
+						// leave pending for worker
+						onDone()
+					}
+			} catch (e: Exception) {
+				onDone()
+			}
+		}
 	}
 }

@@ -13,6 +13,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import kotlinx.coroutines.launch
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -72,12 +74,20 @@ class LoginActivity : FragmentActivity() {
             val isDarkMode by settings.isDarkMode.collectAsState(initial = false)
 
             DDwancanTheme(darkTheme = isDarkMode) {
+                val coroutineScope = rememberCoroutineScope()
                 LoginScreen(
                     onEmailLogin = ::loginWithEmail,
                     onGoogleLogin = ::signInWithGoogle,
                     onFingerprintLogin = ::signInWithFingerprint,
                     onAdminLoginClick = { startActivity(Intent(this, AdminLoginActivity::class.java)) },
-                    onSignUpClick = { startActivity(Intent(this, RegisterActivity::class.java)) }
+                    onSignUpClick = { startActivity(Intent(this, RegisterActivity::class.java)) },
+                    onSkipLogin = {
+                        coroutineScope.launch {
+                            settings.saveLoggedIn(false)
+                            showEnableFingerprintDialog = false
+                            goToHome()
+                        }
+                    }
                 )
 
                 if (showEnableFingerprintDialog) {
@@ -223,6 +233,8 @@ class LoginActivity : FragmentActivity() {
                     promptToEnableFingerprint(email, password, onPromptFlowFinished)
                 } else {
                     // Pengguna Google, atau pengguna email yang sudah pernah ditawari.
+                    // Schedule periodic sync worker
+                    id.app.ddwancan.worker.SyncScheduler.schedulePeriodicSync(this@LoginActivity)
                     goToHome()
                 }
             }

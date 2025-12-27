@@ -48,6 +48,7 @@ fun HomeScreen(
     val settings = remember { SettingsPreference(context) }
     val isEnglish by settings.isEnglish.collectAsState(initial = false)
     val newsList by viewModel.newsList
+    val favoriteViewModel: id.app.ddwancan.viewmodel.FavoriteViewModel = viewModel()
     val isLoading by viewModel.isLoading
     val errorMessage by viewModel.errorMessage
     var selectedCategory by remember { mutableStateOf<String?>(null) }
@@ -58,11 +59,14 @@ fun HomeScreen(
     var dateFrom by remember { mutableStateOf("") } // format: YYYY-MM-DD
     var dateTo by remember { mutableStateOf("") }
 
-    LaunchedEffect(selectedCategory) {
-        viewModel.fetchNews(selectedCategory)
-    }
+    // NewsViewModel now observes local DB and refreshes automatically; filter locally
 
     val filteredList = newsList.filter {
+        val matchesCategory = selectedCategory.isNullOrBlank() || (
+            it.title.contains(selectedCategory ?: "", ignoreCase = true) ||
+            (it.description?.contains(selectedCategory ?: "", ignoreCase = true) == true)
+        )
+        matchesCategory &&
         (authorFilter.isBlank() || it.author?.contains(authorFilter, ignoreCase = true) == true) &&
         (dateFrom.isBlank() || it.publishedAt >= dateFrom) &&
         (dateTo.isBlank() || it.publishedAt <= dateTo)
@@ -141,7 +145,8 @@ fun HomeScreen(
                     }
 
                     items(filteredList) { article ->
-                        ApiNewsCard(article) {
+                        ApiNewsCard(article,
+                            onClick = {
                             val intent = Intent(context, ArticleDetailActivity::class.java).apply {
                                 putExtra("SOURCE_ID", article.source?.id)
                                 putExtra("TITLE", article.title)
@@ -152,7 +157,9 @@ fun HomeScreen(
                                 putExtra("PUBLISHED_AT", article.publishedAt)
                             }
                             context.startActivity(intent)
-                        }
+                        }, onFavorite = {
+                            favoriteViewModel.addFavorite(article.url) 
+                        })
                     }
 
                     item { Spacer(Modifier.height(24.dp)) }
@@ -294,7 +301,8 @@ fun CategoryChip(
 @Composable
 fun ApiNewsCard(
     article: Article,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onFavorite: (() -> Unit)? = null
 ) {
     Surface(
         modifier = Modifier
@@ -328,6 +336,12 @@ fun ApiNewsCard(
                 Text(article.title, fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 2, color = MaterialTheme.colorScheme.onSurface)
                 article.description?.let {
                     Text(it, maxLines = 2, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                }
+            }
+
+            if (onFavorite != null) {
+                IconButton(onClick = onFavorite) {
+                    Icon(Icons.Default.FavoriteBorder, contentDescription = "Favorite", tint = MaterialTheme.colorScheme.primary)
                 }
             }
         }

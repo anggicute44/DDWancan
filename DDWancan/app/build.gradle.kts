@@ -43,8 +43,6 @@ android {
         compose = true
     }
 
-    // Blok composeOptions DIHAPUS karena tidak lagi diperlukan untuk Kotlin 2.0+
-
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -93,6 +91,7 @@ dependencies {
 
     // --- IMAGE LOADING (Coil for Compose) ---
     implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("androidx.work:work-runtime-ktx:2.11.0")
 
     // --- TESTING & DEBUGGING ---
     testImplementation("junit:junit:4.13.2")
@@ -108,7 +107,7 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
     // Room Database
-    val roomVersion = "2.6.1"
+    val roomVersion = "2.7.0"
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
 

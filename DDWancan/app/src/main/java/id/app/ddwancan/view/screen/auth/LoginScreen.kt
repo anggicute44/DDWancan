@@ -28,9 +28,10 @@ import id.app.ddwancan.R
 fun LoginScreen(
     onEmailLogin: (String, String) -> Unit,
     onGoogleLogin: () -> Unit,
-    onFingerprintLogin: () -> Unit, // <-- PARAMETER BARU
+    onFingerprintLogin: () -> Unit,
     onAdminLoginClick: () -> Unit,
-    onSignUpClick: () -> Unit = {}
+    onSignUpClick: () -> Unit = {},
+    onSkipLogin: () -> Unit = {}
 ) {
     val PrimaryBlue = MaterialTheme.colorScheme.primary
 
@@ -171,6 +172,16 @@ fun LoginScreen(
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = PrimaryBlue
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+                TextButton(onClick = onSkipLogin) {
+                    Text(
+                        text = "Skip Login",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.error
                     )
                 }
 

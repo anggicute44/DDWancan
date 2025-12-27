@@ -8,6 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import id.app.ddwancan.data.local.SettingsPreference
 import id.app.ddwancan.data.model.NewsViewModel
+
 import id.app.ddwancan.ui.theme.DDwancanTheme
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -25,7 +26,8 @@ class BeritaActivity : ComponentActivity() {
 
         val category = intent.getStringExtra(EXTRA_CATEGORY)
 
-        viewModel.fetchNews(category)
+        // Panggil fungsi yang benar untuk refresh berita
+        viewModel.refreshFromRemote()
 
         setContent {
             val context = this@BeritaActivity

@@ -101,8 +101,7 @@ fun SearchContent(modifier: Modifier = Modifier, viewModel: NewsViewModel = view
     var query by remember { mutableStateOf(TextFieldValue("")) }
     val news by viewModel.newsList
 
-    LaunchedEffect(Unit) { viewModel.fetchNews(null) }
-
+    // NewsViewModel observes local DB and refreshes automatically
     val filtered = if (query.text.isBlank()) news else news.filter {
         it.title.contains(query.text, ignoreCase = true)
     }
@@ -127,7 +126,8 @@ fun SearchContent(modifier: Modifier = Modifier, viewModel: NewsViewModel = view
         }
 
         items(filtered) { article ->
-            ApiNewsCard(article) {
+            val favVm: id.app.ddwancan.viewmodel.FavoriteViewModel = viewModel()
+            ApiNewsCard(article, onClick = {
                 val intent = Intent(context, ArticleDetailActivity::class.java).apply {
                     putExtra("SOURCE_ID", article.source?.id)
                     putExtra("TITLE", article.title)
@@ -138,7 +138,7 @@ fun SearchContent(modifier: Modifier = Modifier, viewModel: NewsViewModel = view
                     putExtra("PUBLISHED_AT", article.publishedAt)
                 }
                 context.startActivity(intent)
-            }
+            }, onFavorite = { favVm.addFavorite(article.url) })
         }
     }
 }
