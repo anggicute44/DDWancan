@@ -1,5 +1,6 @@
 package id.app.ddwancan.view.screen.profile
 
+import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -10,7 +11,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Email
@@ -23,19 +23,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import id.app.ddwancan.R
-import id.app.ddwancan.ui.theme.PrimaryBlue
-import id.app.ddwancan.viewmodel.ProfileViewModel
-import androidx.compose.ui.platform.LocalContext
-import android.content.Intent
+import id.app.ddwancan.view.activity.FavoriteActivity
 import id.app.ddwancan.view.activity.HomeActivity
 import id.app.ddwancan.view.activity.SearchActivity
-import id.app.ddwancan.view.activity.FavoriteActivity
+import id.app.ddwancan.view.activity.SettingsActivity // <-- IMPORT DITAMBAHKAN
+import id.app.ddwancan.viewmodel.ProfileViewModel
 
 /* ============================================================
    MAIN PROFILE SCREEN
@@ -93,10 +92,10 @@ fun ProfileScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileTopBar() {
+    val context = LocalContext.current // Dapatkan context di sini
     CenterAlignedTopAppBar(
         navigationIcon = {
             // Biasanya di halaman utama profil (Home) tidak ada tombol back
-            // Tapi jika ini submenu, biarkan ada.
         },
         title = {
             Text(
@@ -107,8 +106,10 @@ fun ProfileTopBar() {
             )
         },
         actions = {
-            // Opsional: Ikon Settings
-            IconButton(onClick = { /* TODO: Settings */ }) {
+            // PERBAIKAN: Tambahkan aksi untuk membuka SettingsActivity
+            IconButton(onClick = {
+                context.startActivity(Intent(context, SettingsActivity::class.java))
+            }) {
                 Icon(Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onPrimary)
             }
         },

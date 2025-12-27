@@ -163,16 +163,33 @@ fun HomeScreen(
 fun HomeTopBar(onFilterClick: () -> Unit) {
     CenterAlignedTopAppBar(
         title = {
-            Image(
-                painter = painterResource(R.drawable.logo1),
-                contentDescription = "D'Wacana Logo",
-                modifier = Modifier.height(48.dp),
-                contentScale = ContentScale.Fit
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MenuBook, // 📖 buku terbuka
+                    contentDescription = "D'Wacana Icon",
+                    tint = Color.White,
+                    modifier = Modifier.size(26.dp)
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    text = "D'Wacana",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
         },
         actions = {
             IconButton(onClick = onFilterClick) {
-                Icon(imageVector = Icons.Default.Search, contentDescription = "Filter", tint = MaterialTheme.colorScheme.onPrimary)
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Filter",
+                    tint = Color.White
+                )
             }
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -180,6 +197,7 @@ fun HomeTopBar(onFilterClick: () -> Unit) {
         )
     )
 }
+
 
 /* ============================================================
    BREAKING IMAGE

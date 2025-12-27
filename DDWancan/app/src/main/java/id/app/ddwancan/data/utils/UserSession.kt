@@ -5,6 +5,9 @@ package id.app.ddwancan.data.utils
  * This provides a simple way to access the userId from anywhere in the app
  * after the user has logged in.
  */
+
+
 object UserSession {
     var userId: String? = null
+    var isLoggedIn: Boolean = false
 }

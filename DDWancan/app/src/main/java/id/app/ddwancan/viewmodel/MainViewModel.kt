@@ -1,5 +1,6 @@
-package id.app.ddwancan.viewmodel // Sesuaikan package
+package id.app.ddwancan.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
@@ -14,30 +15,37 @@ class MainViewModel(
     private val preference: UserPreference
 ) : ViewModel() {
 
-    // --- BAGIAN 1: SESSION LOGIN ---
-
-    // Mengambil status login (Live)
-    // Activity akan memantau ini: Jika true -> Home, Jika false -> Login
+    // ======================
+    // SESSION LOGIN
+    // ======================
     fun getSession(): LiveData<Boolean> {
         return preference.getSession().asLiveData()
     }
 
-    // Fungsi Logout
     fun logout() {
         viewModelScope.launch {
             preference.logout()
         }
     }
 
-    // --- BAGIAN 2: BERITA OFFLINE ---
+    // ======================
+    // BERITA (ROOM)
+    // ======================
+    val berita: LiveData<List<NewsEntity>> =
+        repository.getAllBerita().asLiveData()
 
-    // Mengambil data berita dari database (Live)
-    val berita: LiveData<List<NewsEntity>> = repository.getAllBerita().asLiveData()
-
-    // Fungsi untuk update data dari internet (Dipanggil saat refresh)
+    // ======================
+    // REFRESH DARI API
+    // ======================
     fun refreshData() {
         viewModelScope.launch {
-            repository.refreshBerita()
+            try {
+                Log.d("MainViewModel", "Mulai refresh berita...")
+                repository.refreshBerita()
+                Log.d("MainViewModel", "Refresh berita selesai")
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "Gagal refresh berita", e)
+            }
         }
     }
 }

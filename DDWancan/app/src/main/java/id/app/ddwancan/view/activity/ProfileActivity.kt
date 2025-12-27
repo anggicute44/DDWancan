@@ -7,6 +7,10 @@ import androidx.activity.compose.setContent
 import id.app.ddwancan.ui.theme.DDwancanTheme
 import id.app.ddwancan.view.screen.profile.ProfileScreen
 
+// PERBAIKAN: Menambahkan import yang hilang
+import id.app.ddwancan.view.activity.EditProfileActivity
+import id.app.ddwancan.view.activity.LoginActivity
+
 class ProfileActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -19,7 +23,7 @@ class ProfileActivity : ComponentActivity() {
                         val intent = Intent(this@ProfileActivity, EditProfileActivity::class.java)
                         startActivity(intent)
                     },
-                    // 👇 TAMBAHKAN BAGIAN INI (Callback untuk Logout)
+                    // 👇 Callback untuk Logout
                     onNavigateToLogin = {
                         val intent = Intent(this@ProfileActivity, LoginActivity::class.java)
                         // Flag ini penting: Menghapus history agar user tidak bisa tekan 'Back' ke profil
