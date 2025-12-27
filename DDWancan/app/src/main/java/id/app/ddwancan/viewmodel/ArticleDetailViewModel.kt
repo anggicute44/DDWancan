@@ -1,14 +1,21 @@
 package id.app.ddwancan.viewmodel
 
+import android.app.Application
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import id.app.ddwancan.data.local.room.AppDatabase
+import id.app.ddwancan.data.local.room.FavoriteEntity
+import id.app.ddwancan.data.local.room.PendingFavoriteEntity
 import id.app.ddwancan.data.utils.ArticleUtils
+import kotlinx.coroutines.launch
 
-class ArticleDetailViewModel : ViewModel() {
+class ArticleDetailViewModel(application: Application) : AndroidViewModel(application) {
 
 	private val db = FirebaseFirestore.getInstance()
+	private val dbLocal = AppDatabase.getInstance(application)
 
 	val isFavorited = mutableStateOf(false)
 	val favoritesCount = mutableStateOf(0)
@@ -19,20 +26,27 @@ class ArticleDetailViewModel : ViewModel() {
 		if (articleUrl.isBlank()) return
 
 		val docId = ArticleUtils.docIdFromUrl(articleUrl)
+
+		// Load favoritesCount from remote (best-effort)
 		db.collection("News").document(docId).get()
 			.addOnSuccessListener { doc ->
 				if (doc.exists()) {
 					favoritesCount.value = (doc.getLong("favoritesCount")?.toInt() ?: 0)
-					val list = doc.get("favoritedBy") as? List<*>
-					isFavorited.value = if (userId == null) false else list?.contains(userId) == true
 				} else {
 					favoritesCount.value = 0
-					isFavorited.value = false
 				}
 			}
-			.addOnFailureListener { e ->
-				error.value = e.message
+			.addOnFailureListener { e -> error.value = e.message }
+
+		// Check local favorites for favorited state
+		viewModelScope.launch {
+			try {
+				val count = dbLocal.favoriteDao().isFavoritedOnce(articleUrl)
+				isFavorited.value = count > 0
+			} catch (e: Exception) {
+				isFavorited.value = false
 			}
+		}
 	}
 
 	fun toggleFavorite(
@@ -48,94 +62,106 @@ class ArticleDetailViewModel : ViewModel() {
 			return
 		}
 
-		val docId = ArticleUtils.docIdFromUrl(articleUrl)
-		val docRef = db.collection("News").document(docId)
-
-		// Ambil dokumen dulu untuk tahu apakah user sudah memberi favorite
 		isLoading.value = true
-		docRef.get()
-			.addOnSuccessListener { doc ->
-				val list = doc.get("favoritedBy") as? List<String>
-				val hasFav = list?.contains(userId) == true
 
-				if (hasFav) {
-					// Remove favorite
-					docRef.update(
-						"favoritesCount", FieldValue.increment(-1),
-						"favoritedBy", FieldValue.arrayRemove(userId)
-					).addOnSuccessListener {
-						isFavorited.value = false
-						favoritesCount.value = (favoritesCount.value - 1).coerceAtLeast(0)
-						// Hapus dari koleksi favorites user
-						try {
-							db.collection("users").document(userId!!)
-								.collection("favorites").document(docId)
-								.delete()
-						} catch (ignored: Exception) {
+		viewModelScope.launch {
+			try {
+				val currently = dbLocal.favoriteDao().isFavoritedOnce(articleUrl) > 0
+
+				if (currently) {
+					// remove local immediately and try remove remote; queue pending remove on failure
+					try { dbLocal.favoriteDao().deleteByUrl(articleUrl) } catch (_: Exception) {}
+					isFavorited.value = false
+					// optimistic decrement so UI shows change while offline
+					favoritesCount.value = (favoritesCount.value - 1).coerceAtLeast(0)
+					val docId = ArticleUtils.docIdFromUrl(articleUrl)
+					try {
+						// attempt to delete user's favorite doc and update News counters
+						if (!userId.isNullOrBlank()) {
+							db.collection("users").document(userId).collection("favorites").document(docId).delete().addOnFailureListener { }
 						}
-						isLoading.value = false
-					}.addOnFailureListener { e ->
-						error.value = e.message
-						isLoading.value = false
+						db.collection("News").document(docId)
+							.update(
+								"favoritesCount", FieldValue.increment(-1),
+								"favoritedBy", FieldValue.arrayRemove(userId)
+							)
+							.addOnSuccessListener {
+								isFavorited.value = false
+								favoritesCount.value = (favoritesCount.value - 1).coerceAtLeast(0)
+								isLoading.value = false
+							}
+							.addOnFailureListener {
+								// queue pending remove
+								viewModelScope.launch {
+									val pending = PendingFavoriteEntity(articleUrl = articleUrl, userId = userId, action = "remove")
+									dbLocal.pendingFavoriteDao().insertPendingFavorite(pending)
+									isLoading.value = false
+								}
+							}
+					} catch (e: Exception) {
+						// queue pending remove if any exception
+						viewModelScope.launch {
+							val pending = PendingFavoriteEntity(articleUrl = articleUrl, userId = userId, action = "remove")
+							dbLocal.pendingFavoriteDao().insertPendingFavorite(pending)
+							isLoading.value = false
+						}
 					}
 				} else {
-					// Add favorite
-					docRef.update(
-						"favoritesCount", FieldValue.increment(1),
-						"favoritedBy", FieldValue.arrayUnion(userId)
-					).addOnSuccessListener {
+					// Add favorite locally + pending
+					val fav = FavoriteEntity(url = articleUrl, title = title, description = description, urlToImage = imageUrl, publishedAt = publishedAt)
+					dbLocal.favoriteDao().insertFavorite(fav)
+					isFavorited.value = true
+					// optimistic increment so UI shows change while offline
+					favoritesCount.value = favoritesCount.value + 1
+
+					val pending = PendingFavoriteEntity(articleUrl = articleUrl, userId = userId, action = "add")
+					dbLocal.pendingFavoriteDao().insertPendingFavorite(pending)
+
+					// Try immediate remote update
+					val docId = ArticleUtils.docIdFromUrl(articleUrl)
+					try {
+						db.collection("News").document(docId)
+							.update(
+								"favoritesCount", FieldValue.increment(1),
+								"favoritedBy", FieldValue.arrayUnion(userId)
+							)
+							.addOnSuccessListener {
+								// Also add to user's favorites collection
+								try {
+									val favData = mapOf(
+										"title" to (title ?: ""),
+										"description" to (description ?: ""),
+										"url" to articleUrl,
+										"urlToImage" to (imageUrl ?: ""),
+										"publishedAt" to (publishedAt ?: "")
+									)
+									db.collection("users").document(userId).collection("favorites").document(docId).set(favData)
+								} catch (_: Exception) {}
+								// mark pending as synced
+								viewModelScope.launch {
+									try { dbLocal.pendingFavoriteDao().markAsSyncedByArticle(articleUrl) } catch (_: Exception) {}
+									isFavorited.value = true
+									favoritesCount.value = favoritesCount.value + 1
+									isLoading.value = false
+								}
+							}
+							.addOnFailureListener {
+								// If update failed, leave pending; UI already shows favorited locally
+								isFavorited.value = true
+								favoritesCount.value = favoritesCount.value + 1
+								isLoading.value = false
+							}
+					} catch (e: Exception) {
+						// leave pending
 						isFavorited.value = true
 						favoritesCount.value = favoritesCount.value + 1
-						// Simpan ke koleksi favorites milik user
-						try {
-							val favData = mapOf(
-								"title" to (title ?: ""),
-								"description" to (description ?: ""),
-								"url" to articleUrl,
-								"urlToImage" to (imageUrl ?: ""),
-								"publishedAt" to (publishedAt ?: "")
-							)
-							db.collection("users").document(userId!!)
-								.collection("favorites").document(docId)
-								.set(favData)
-						} catch (ignored: Exception) {
-						}
 						isLoading.value = false
-					}.addOnFailureListener { e ->
-						// Jika dokumen belum ada, buat dokumen baru dengan field yang dibutuhkan
-						docRef.set(
-							mapOf(
-								"favoritesCount" to 1,
-								"favoritedBy" to listOf(userId)
-							)
-						).addOnSuccessListener {
-							isFavorited.value = true
-							favoritesCount.value = 1
-							// Simpan juga ke koleksi favorites user
-							try {
-								val favData = mapOf(
-									"title" to (title ?: ""),
-									"description" to (description ?: ""),
-									"url" to articleUrl,
-									"urlToImage" to (imageUrl ?: ""),
-									"publishedAt" to (publishedAt ?: "")
-								)
-								db.collection("users").document(userId!!)
-									.collection("favorites").document(docId)
-									.set(favData)
-							} catch (ignored: Exception) {
-							}
-							isLoading.value = false
-						}.addOnFailureListener { ex ->
-							error.value = ex.message
-							isLoading.value = false
-						}
 					}
 				}
-			}
-			.addOnFailureListener { e ->
+			} catch (e: Exception) {
 				error.value = e.message
 				isLoading.value = false
 			}
+		}
 	}
 }

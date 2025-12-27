@@ -49,6 +49,8 @@ fun HomeScreen(
     val isEnglish by settings.isEnglish.collectAsState(initial = false)
     val newsList by viewModel.newsList
     val favoriteViewModel: id.app.ddwancan.viewmodel.FavoriteViewModel = viewModel()
+    // Ensure we start observing local favorites
+    LaunchedEffect(Unit) { favoriteViewModel.loadFavorites() }
     val isLoading by viewModel.isLoading
     val errorMessage by viewModel.errorMessage
     var selectedCategory by remember { mutableStateOf<String?>(null) }
@@ -157,8 +159,12 @@ fun HomeScreen(
                                 putExtra("PUBLISHED_AT", article.publishedAt)
                             }
                             context.startActivity(intent)
-                        }, onFavorite = {
-                            favoriteViewModel.addFavorite(article.url) 
+                        }, isFavorited = favoriteViewModel.favorites.value.any { it.url == article.url }, onFavorite = {
+                            if (favoriteViewModel.favorites.value.any { it.url == article.url }) {
+                                favoriteViewModel.removeFavorite(article.url)
+                            } else {
+                                favoriteViewModel.addFavorite(article.url)
+                            }
                         })
                     }
 
@@ -302,6 +308,7 @@ fun CategoryChip(
 fun ApiNewsCard(
     article: Article,
     onClick: () -> Unit,
+    isFavorited: Boolean = false,
     onFavorite: (() -> Unit)? = null
 ) {
     Surface(
@@ -341,7 +348,11 @@ fun ApiNewsCard(
 
             if (onFavorite != null) {
                 IconButton(onClick = onFavorite) {
-                    Icon(Icons.Default.FavoriteBorder, contentDescription = "Favorite", tint = MaterialTheme.colorScheme.primary)
+                    Icon(
+                        if (isFavorited) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Favorite",
+                        tint = if (isFavorited) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                    )
                 }
             }
         }

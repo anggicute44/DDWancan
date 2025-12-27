@@ -56,20 +56,42 @@ class NewsRepository(private val context: Context) {
     }
 
     suspend fun syncPending(userId: String?) {
-        // Upload pending favorites
+        // Handle pending favorites (both 'add' and 'remove')
         val pendingFavs: List<PendingFavoriteEntity> = pendingFavoriteDao.getPendingFavoritesOnce()
         for (fav in pendingFavs) {
             try {
-                val data = hashMapOf(
-                    "user_id" to fav.userId,
-                    "article_url" to fav.articleUrl,
-                    "created_at" to FieldValue.serverTimestamp()
-                )
-                db.collection("Favorite").add(data).await()
-                // mark as synced
-                pendingFavoriteDao.markAsSynced(fav.id)
+                val docId = fav.articleUrl.hashCode().toString()
+                if (fav.action == "add") {
+                    val data = hashMapOf(
+                        "user_id" to fav.userId,
+                        "article_url" to fav.articleUrl,
+                        "created_at" to FieldValue.serverTimestamp()
+                    )
+                    db.collection("Favorite").add(data).await()
+                    // update News doc
+                    db.collection("News").document(docId).update(
+                        "favoritesCount", FieldValue.increment(1),
+                        "favoritedBy", FieldValue.arrayUnion(fav.userId)
+                    ).await()
+                    pendingFavoriteDao.markAsSynced(fav.id)
+                } else if (fav.action == "remove") {
+                    // remove favorite remote: remove from user's favorites and update counters
+                    // delete from users/{uid}/favorites where docId
+                    if (!fav.userId.isNullOrBlank()) {
+                        try {
+                            db.collection("users").document(fav.userId).collection("favorites").document(docId).delete().await()
+                        } catch (_: Exception) {}
+                    }
+                    try {
+                        db.collection("News").document(docId).update(
+                            "favoritesCount", FieldValue.increment(-1),
+                            "favoritedBy", FieldValue.arrayRemove(fav.userId)
+                        ).await()
+                    } catch (_: Exception) {}
+                    pendingFavoriteDao.markAsSynced(fav.id)
+                }
             } catch (e: Exception) {
-                // continue, will retry later
+                // continue, retry later
             }
         }
 

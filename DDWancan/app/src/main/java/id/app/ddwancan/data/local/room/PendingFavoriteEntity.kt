@@ -9,6 +9,8 @@ data class PendingFavoriteEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     @ColumnInfo(name = "article_url") val articleUrl: String,
     @ColumnInfo(name = "user_id") val userId: String?,
+    /** action: 'add' or 'remove' */
+    @ColumnInfo(name = "action") val action: String = "add",
     @ColumnInfo(name = "is_synced") val isSynced: Boolean = false,
     @ColumnInfo(name = "created_at") val createdAt: Long = System.currentTimeMillis()
 )

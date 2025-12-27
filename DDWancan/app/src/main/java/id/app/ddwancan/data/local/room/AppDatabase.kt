@@ -6,14 +6,15 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [ArticleEntity::class, PendingFavoriteEntity::class, PendingCommentEntity::class],
-    version = 1,
+    entities = [ArticleEntity::class, PendingFavoriteEntity::class, PendingCommentEntity::class, FavoriteEntity::class],
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun articleDao(): ArticleDao
     abstract fun pendingFavoriteDao(): PendingFavoriteDao
     abstract fun pendingCommentDao(): PendingCommentDao
+    abstract fun favoriteDao(): FavoriteDao
 
     companion object {
         @Volatile
@@ -25,7 +26,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "ddwancan_db"
-                ).build()
+                ).fallbackToDestructiveMigration().build()
                 INSTANCE = instance
                 instance
             }

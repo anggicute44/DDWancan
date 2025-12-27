@@ -127,6 +127,7 @@ fun SearchContent(modifier: Modifier = Modifier, viewModel: NewsViewModel = view
 
         items(filtered) { article ->
             val favVm: id.app.ddwancan.viewmodel.FavoriteViewModel = viewModel()
+            LaunchedEffect(Unit) { favVm.loadFavorites() }
             ApiNewsCard(article, onClick = {
                 val intent = Intent(context, ArticleDetailActivity::class.java).apply {
                     putExtra("SOURCE_ID", article.source?.id)
@@ -138,7 +139,9 @@ fun SearchContent(modifier: Modifier = Modifier, viewModel: NewsViewModel = view
                     putExtra("PUBLISHED_AT", article.publishedAt)
                 }
                 context.startActivity(intent)
-            }, onFavorite = { favVm.addFavorite(article.url) })
+            }, isFavorited = favVm.favorites.value.any { it.url == article.url }, onFavorite = {
+                if (favVm.favorites.value.any { it.url == article.url }) favVm.removeFavorite(article.url) else favVm.addFavorite(article.url)
+            })
         }
     }
 }
