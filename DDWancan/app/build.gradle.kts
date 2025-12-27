@@ -3,16 +3,17 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("org.jetbrains.kotlin.kapt")
 }
 
 android {
     namespace = "id.app.ddwancan"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "id.app.ddwancan"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -41,6 +42,7 @@ android {
     buildFeatures {
         compose = true
     }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -50,11 +52,14 @@ android {
 
 dependencies {
 
+    implementation("androidx.biometric:biometric:1.1.0")
+
     // --- JETPACK COMPOSE & UI ---
     implementation(platform("androidx.compose:compose-bom:2024.09.01"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.runtime:runtime-livedata")
     implementation("androidx.compose.foundation:foundation")
@@ -62,10 +67,14 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.9.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.0")
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
 
     // --- CORE & NAVIGATION ---
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.navigation:navigation-compose:2.7.7")
+    // --- BIOMETRIC ---
+    implementation("androidx.biometric:biometric-ktx:1.2.0-alpha05")
 
     // --- FIREBASE ---
     implementation(platform("com.google.firebase:firebase-bom:33.3.0"))
@@ -82,8 +91,7 @@ dependencies {
 
     // --- IMAGE LOADING (Coil for Compose) ---
     implementation("io.coil-kt:coil-compose:2.6.0")
-    implementation(libs.androidx.benchmark.traceprocessor)
-    implementation(libs.androidx.compose.foundation)
+    implementation("androidx.work:work-runtime-ktx:2.11.0")
 
     // --- TESTING & DEBUGGING ---
     testImplementation("junit:junit:4.13.2")
@@ -93,4 +101,16 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+    implementation("androidx.biometric:biometric:1.1.0")
+
+    // 1. DataStore (Untuk Session Login - Mengatasi error merah sebelumnya)
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    // Room Database
+    val roomVersion = "2.7.0"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+
+    // Perhatikan baris ini, pastikan tulisannya "kapt" (bukan implementation)
+    kapt("androidx.room:room-compiler:$roomVersion")
 }

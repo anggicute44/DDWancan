@@ -4,22 +4,30 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.*
+import id.app.ddwancan.data.local.SettingsPreference
 import id.app.ddwancan.ui.theme.DDwancanTheme
 import id.app.ddwancan.view.screen.profile.ProfileScreen
+
+import id.app.ddwancan.view.activity.EditProfileActivity
+import id.app.ddwancan.view.activity.LoginActivity
 
 class ProfileActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
-            DDwancanTheme {
+            val context = this@ProfileActivity
+            val settings = remember { SettingsPreference(context) }
+            val isDarkMode by settings.isDarkMode.collectAsState(initial = false)
+            
+            DDwancanTheme(darkTheme = isDarkMode) {
                 ProfileScreen(
                     onEditClick = {
-                        // Navigasi ke EditProfileActivity
                         val intent = Intent(this@ProfileActivity, EditProfileActivity::class.java)
                         startActivity(intent)
                     },
-                    // 👇 TAMBAHKAN BAGIAN INI (Callback untuk Logout)
+                    // 👇 Callback untuk Logout
                     onNavigateToLogin = {
                         val intent = Intent(this@ProfileActivity, LoginActivity::class.java)
                         // Flag ini penting: Menghapus history agar user tidak bisa tekan 'Back' ke profil

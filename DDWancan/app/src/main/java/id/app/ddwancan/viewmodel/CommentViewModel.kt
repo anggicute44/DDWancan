@@ -1,15 +1,20 @@
 package id.app.ddwancan.viewmodel
 
 import android.util.Log
+import android.app.Application
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import id.app.ddwancan.data.local.room.AppDatabase
+import id.app.ddwancan.data.local.room.PendingCommentEntity
 import id.app.ddwancan.data.model.Comment
+import kotlinx.coroutines.launch
 
-class CommentViewModel : ViewModel() {
+class CommentViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = FirebaseFirestore.getInstance()
 
@@ -59,30 +64,49 @@ class CommentViewModel : ViewModel() {
             _error.value = "User not logged in."
             return
         }
+        // Always persist pending comment locally first
+        val dbLocal = AppDatabase.getInstance(getApplication())
+        viewModelScope.launch {
+            try {
+                val pendingId = dbLocal.pendingCommentDao().insertPendingComment(
+                    PendingCommentEntity(
+                        articleUrl = articleUrl,
+                        userId = userId,
+                        content = message
+                    )
+                )
 
-        // DATA YANG DISIMPAN (FLAT)
-        // Only store minimal comment info; user data (name/avatar) will be loaded live when rendering comments.
-        val commentData = hashMapOf(
-            "id_user" to userId,
-            "komentar" to message,
-            "waktu" to FieldValue.serverTimestamp(),
+                // Try immediate remote send; on success mark as synced
+                val commentData = hashMapOf(
+                    "id_user" to userId,
+                    "komentar" to message,
+                    "waktu" to FieldValue.serverTimestamp(),
+                    "article_url" to articleUrl,
+                    "source_id" to sourceId,
+                    "warningTotal" to 0,
+                    "status" to "ok"
+                )
 
-            // Kita simpan ID Berita di dalam dokumen komentar
-            "article_url" to articleUrl,
-            "source_id" to sourceId,
-            "warningTotal" to 0,
-            "status" to "ok"
-        )
-
-        // Simpan langsung ke root collection "Comment"
-        db.collection("Comment")
-            .add(commentData)
-            .addOnSuccessListener {
-                onDone()
-            }
-            .addOnFailureListener { e ->
+                db.collection("Comment")
+                    .add(commentData)
+                    .addOnSuccessListener {
+                        // mark as synced
+                        viewModelScope.launch {
+                            try {
+                                dbLocal.pendingCommentDao().markAsSynced(pendingId)
+                            } catch (_: Exception) {}
+                        }
+                        onDone()
+                    }
+                    .addOnFailureListener { e ->
+                        // leave pending for worker to handle
+                        _error.value = e.localizedMessage
+                        onDone()
+                    }
+            } catch (e: Exception) {
                 _error.value = e.localizedMessage
             }
+        }
     }
 
     // --- 4. REPORT COMMENT ---

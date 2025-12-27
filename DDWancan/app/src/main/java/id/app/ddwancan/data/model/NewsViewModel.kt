@@ -1,15 +1,17 @@
 package id.app.ddwancan.data.model
 
+import android.app.Application
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.firestore.FirebaseFirestore
+import id.app.ddwancan.data.repository.NewsRepository
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-class NewsViewModel : ViewModel() {
+class NewsViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val db = FirebaseFirestore.getInstance()
+    private val repository = NewsRepository(application.applicationContext)
 
     private val _newsList = mutableStateOf<List<Article>>(emptyList())
     val newsList: State<List<Article>> = _newsList
@@ -20,56 +22,33 @@ class NewsViewModel : ViewModel() {
     private val _errorMessage = mutableStateOf<String?>(null)
     val errorMessage: State<String?> = _errorMessage
 
-    /**
-     * Fetch articles from Firestore `News` collection.
-     * If `category` is provided, apply a simple client-side filter that
-     * checks whether the title/description contains the category keyword.
-     */
-    fun fetchNews(category: String?) {
-        _isLoading.value = true
-        _errorMessage.value = null
-
-        // Use realtime listener so UI updates when News collection changes
-        db.collection("News").addSnapshotListener { snapshot, e ->
-            _isLoading.value = false
-            if (e != null) {
-                _errorMessage.value = e.message
-                return@addSnapshotListener
+    init {
+        // Observe local DB and emit to UI
+        viewModelScope.launch {
+            repository.getArticlesFlow().collectLatest { list ->
+                _newsList.value = list
             }
-            if (snapshot != null) {
-                val list = snapshot.documents.mapNotNull { doc ->
-                    val sourceId = doc.getString("source_id")
-                    val sourceName = doc.getString("source_name")
-                    val author = doc.getString("author")
-                    val title = doc.getString("title") ?: return@mapNotNull null
-                    val description = doc.getString("description")
-                    val url = doc.getString("url") ?: return@mapNotNull null
-                    val urlToImage = doc.getString("urlToImage")
-                    val publishedAt = doc.getString("publishedAt") ?: ""
+        }
+        // Kick off a background refresh from remote
+        refreshFromRemote()
+    }
 
-                    Article(
-                        source = if (sourceId != null || sourceName != null) Source(id = sourceId, name = sourceName ?: "") else null,
-                        author = author,
-                        title = title,
-                        description = description,
-                        url = url,
-                        urlToImage = urlToImage,
-                        publishedAt = publishedAt
-                    )
-                }
-
-                val filtered = if (category.isNullOrBlank()) {
-                    list
-                } else {
-                    val key = category.lowercase()
-                    list.filter { art ->
-                        (art.title.lowercase().contains(key)) || (art.description?.lowercase()?.contains(key) == true)
-                    }
-                }
-
-                val sorted = filtered.sortedByDescending { it.publishedAt }
-                _newsList.value = sorted
+    fun refreshFromRemote() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                repository.refreshFromRemote()
+            } catch (e: Exception) {
+                _errorMessage.value = e.localizedMessage
+            } finally {
+                _isLoading.value = false
             }
+        }
+    }
+
+    fun syncPending(userId: String?) {
+        viewModelScope.launch {
+            repository.syncPending(userId)
         }
     }
 }

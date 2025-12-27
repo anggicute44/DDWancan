@@ -6,8 +6,10 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import id.app.ddwancan.data.local.SettingsPreference
 import id.app.ddwancan.data.utils.UserSession
 import id.app.ddwancan.ui.theme.DDwancanTheme
 import id.app.ddwancan.view.screen.home.HomeScreen
@@ -35,7 +37,11 @@ class HomeActivity : ComponentActivity() {
         }
 
         setContent {
-            DDwancanTheme {
+            val context = this@HomeActivity
+            val settings = remember { SettingsPreference(context) }
+            val isDarkMode by settings.isDarkMode.collectAsState(initial = false)
+            
+            DDwancanTheme(darkTheme = isDarkMode) {
                 HomeScreen()
             }
         }

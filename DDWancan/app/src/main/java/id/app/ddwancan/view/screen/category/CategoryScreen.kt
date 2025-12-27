@@ -17,6 +17,10 @@ import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,14 +68,18 @@ fun CategoryScreen(
     category: String,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
+    val settings = remember { id.app.ddwancan.data.local.SettingsPreference(context) }
+    val isEnglish by settings.isEnglish.collectAsState(initial = false)
     Scaffold(
         topBar = { CategoryTopBar(category, onBack) },
-        bottomBar = { CategoryBottomBar() },
+        bottomBar = { CategoryBottomBar(isEnglish) },
         containerColor = Color.White
     ) { padding ->
         CategoryContent(
             modifier = Modifier.padding(padding),
-            category = category
+            category = category,
+            isEnglish = isEnglish
         )
     }
 }
@@ -115,7 +123,8 @@ fun CategoryTopBar(
 @Composable
 fun CategoryContent(
     modifier: Modifier = Modifier,
-    category: String
+    category: String,
+    isEnglish: Boolean
 ) {
     val articles = remember {
         listOf(
@@ -136,7 +145,7 @@ fun CategoryContent(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Jelajahi berita seputar $category",
+                text = if (isEnglish) "Explore news about $category" else "Jelajahi berita seputar $category",
                 fontSize = 14.sp,
                 color = Color.Gray
             )
@@ -144,7 +153,8 @@ fun CategoryContent(
             Spacer(Modifier.height(16.dp))
 
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                items(listOf("All", "Popular", "Latest")) {
+                val chips = if (isEnglish) listOf("All", "Popular", "Latest") else listOf("Semua", "Populer", "Terbaru")
+                items(chips) {
                     CategoryChip(it)
                 }
             }
@@ -291,25 +301,25 @@ fun MetaItem(
    BOTTOM NAV
 ============================================================ */
 @Composable
-fun CategoryBottomBar() {
+fun CategoryBottomBar(isEnglish: Boolean) {
     Column {
         HorizontalDivider(color = Color(0xFFE0E0E0))
 
         NavigationBar(containerColor = Color.White) {
 
-            NavItem(Icons.Default.Home, "Home", true) {}
+            NavItem(Icons.Default.Home, if (isEnglish) "Home" else "Beranda", true) {}
 
-            NavItem(Icons.Default.Search, "Search") {
+            NavItem(Icons.Default.Search, if (isEnglish) "Search" else "Cari") {
                 val context = null
                 context.startActivity(Intent(context, SearchActivity::class.java))
             }
 
-            NavItem(Icons.Default.Favorite, "Favorite") {
+            NavItem(Icons.Default.Favorite, if (isEnglish) "Favorite" else "Favorit") {
                 val context = null
                 context.startActivity(Intent(context, FavoriteActivity::class.java))
             }
 
-            NavItem(Icons.Default.Person, "Profile") {
+            NavItem(Icons.Default.Person, if (isEnglish) "Profile" else "Profil") {
                 val context = null
                 context.startActivity(Intent(context, ProfileActivity::class.java))
             }

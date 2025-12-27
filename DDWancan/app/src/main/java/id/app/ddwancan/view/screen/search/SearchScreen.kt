@@ -16,6 +16,10 @@ import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import id.app.ddwancan.data.local.SettingsPreference
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,6 +48,10 @@ import id.app.ddwancan.view.screen.home.ApiNewsCard
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen() {
+    val context = LocalContext.current
+    val settings = remember { SettingsPreference(context) }
+    val isEnglish by settings.isEnglish.collectAsState(initial = false)
+
     Scaffold(
         topBar = { SearchTopBar() },
         bottomBar = { BottomNavigationBar(NavRoutes.SEARCH) },
@@ -93,8 +101,7 @@ fun SearchContent(modifier: Modifier = Modifier, viewModel: NewsViewModel = view
     var query by remember { mutableStateOf(TextFieldValue("")) }
     val news by viewModel.newsList
 
-    LaunchedEffect(Unit) { viewModel.fetchNews(null) }
-
+    // NewsViewModel observes local DB and refreshes automatically
     val filtered = if (query.text.isBlank()) news else news.filter {
         it.title.contains(query.text, ignoreCase = true)
     }
@@ -106,16 +113,22 @@ fun SearchContent(modifier: Modifier = Modifier, viewModel: NewsViewModel = view
     ) {
 
         item {
-            Text("Cari Berita", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+            val context = LocalContext.current
+            val settings = remember { SettingsPreference(context) }
+            val isEnglish by settings.isEnglish.collectAsState(initial = false)
+
+            Text(if (isEnglish) "Search News" else "Cari Berita", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
             Spacer(Modifier.height(12.dp))
             SearchBarField(query) { newVal -> query = newVal }
             Spacer(Modifier.height(20.dp))
-            Text("Hasil Pencarian", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground)
+            Text(if (isEnglish) "Search Results" else "Hasil Pencarian", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground)
             Spacer(Modifier.height(12.dp))
         }
 
         items(filtered) { article ->
-            ApiNewsCard(article) {
+            val favVm: id.app.ddwancan.viewmodel.FavoriteViewModel = viewModel()
+            LaunchedEffect(Unit) { favVm.loadFavorites() }
+            ApiNewsCard(article, onClick = {
                 val intent = Intent(context, ArticleDetailActivity::class.java).apply {
                     putExtra("SOURCE_ID", article.source?.id)
                     putExtra("TITLE", article.title)
@@ -126,7 +139,9 @@ fun SearchContent(modifier: Modifier = Modifier, viewModel: NewsViewModel = view
                     putExtra("PUBLISHED_AT", article.publishedAt)
                 }
                 context.startActivity(intent)
-            }
+            }, isFavorited = favVm.favorites.value.any { it.url == article.url }, onFavorite = {
+                if (favVm.favorites.value.any { it.url == article.url }) favVm.removeFavorite(article.url) else favVm.addFavorite(article.url)
+            })
         }
     }
 }
@@ -141,7 +156,12 @@ fun SearchBarField(value: TextFieldValue, onValueChange: (TextFieldValue) -> Uni
     TextField(
         value = value,
         onValueChange = onValueChange,
-        placeholder = { Text("Cari berita...") },
+        placeholder = { 
+            val context = LocalContext.current
+            val settings = remember { SettingsPreference(context) }
+            val isEnglish by settings.isEnglish.collectAsState(initial = false)
+            Text(if (isEnglish) "Search news..." else "Cari berita...")
+        },
         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
         modifier = Modifier
             .fillMaxWidth()

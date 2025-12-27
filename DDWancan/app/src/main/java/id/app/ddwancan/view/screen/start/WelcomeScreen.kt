@@ -23,10 +23,12 @@ import id.app.ddwancan.R
 fun WelcomeScreen(
     onStartClick: () -> Unit
 ) {
+    val brandBlue = Color(0xFF1570D3) // 🔵 biru konsisten
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary)
+            .background(brandBlue)
     ) {
         Column(
             modifier = Modifier
@@ -42,24 +44,27 @@ fun WelcomeScreen(
                 modifier = Modifier.size(150.dp)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             Text(
                 text = "The NextGen short NEWS app",
                 fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onPrimary,
+                color = Color.White,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             Button(
                 onClick = onStartClick,
                 modifier = Modifier
                     .width(200.dp)
                     .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = brandBlue
+                )
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -68,14 +73,12 @@ fun WelcomeScreen(
                     Text(
                         text = "Mulai",
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp)
                     )
                 }

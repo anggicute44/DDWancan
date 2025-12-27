@@ -5,8 +5,9 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import id.app.ddwancan.data.local.SettingsPreference
 import id.app.ddwancan.ui.theme.DDwancanTheme
 import id.app.ddwancan.view.screen.admin.AdminUpdateNewsScreen
 import id.app.ddwancan.viewmodel.AdminNewsViewModel
@@ -19,7 +20,11 @@ class AdminUpdateNewsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            DDwancanTheme {
+            val context = this@AdminUpdateNewsActivity
+            val settings = remember { SettingsPreference(context) }
+            val isDarkMode by settings.isDarkMode.collectAsState(initial = false)
+
+            DDwancanTheme(darkTheme = isDarkMode) {
                 AdminUpdateNewsScreen(
                     viewModel = viewModel,
                     onBack = { finish() }

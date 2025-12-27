@@ -27,16 +27,13 @@ private val LightColorScheme = lightColorScheme(
     onSurface = TextDark             // Teks di atas surface (hitam)
 )
 
+
 @Composable
 fun DDwancanTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = isSystemInDarkTheme(), // ⬅️ DEFAULT
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) {
-        DarkColorScheme
-    } else {
-        LightColorScheme
-    }
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
     MaterialTheme(
         colorScheme = colorScheme,
@@ -44,3 +41,4 @@ fun DDwancanTheme(
         content = content
     )
 }
+

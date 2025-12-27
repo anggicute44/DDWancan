@@ -1,5 +1,6 @@
 package id.app.ddwancan.view.screen.profile
 
+import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -10,7 +11,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Email
@@ -23,39 +23,38 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import id.app.ddwancan.R
-import id.app.ddwancan.ui.theme.PrimaryBlue
-import id.app.ddwancan.viewmodel.ProfileViewModel
-import androidx.compose.ui.platform.LocalContext
-import android.content.Intent
+import id.app.ddwancan.view.activity.FavoriteActivity
 import id.app.ddwancan.view.activity.HomeActivity
 import id.app.ddwancan.view.activity.SearchActivity
-import id.app.ddwancan.view.activity.FavoriteActivity
+import id.app.ddwancan.view.activity.SettingsActivity
+import id.app.ddwancan.viewmodel.ProfileViewModel
 
-/* ============================================================
-   MAIN PROFILE SCREEN
-============================================================ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     onEditClick: () -> Unit,
-    onNavigateToLogin: () -> Unit, // Callback untuk kembali ke Login
-    viewModel: ProfileViewModel = viewModel() // Inject ViewModel
+    onNavigateToLogin: () -> Unit,
+    viewModel: ProfileViewModel = viewModel()
 ) {
-    // Mengambil data dari ViewModel (Realtime / dari Firestore)
     val nameState = viewModel.name.value
     val emailState = viewModel.email.value
     val avatarIndex = viewModel.avatar.value
     val isLoading = viewModel.isLoading.value
+    // PERBAIKAN: Dapatkan context di sini
+    val context = LocalContext.current
+    val settings = remember { id.app.ddwancan.data.local.SettingsPreference(context) }
+    val isEnglish by settings.isEnglish.collectAsState(initial = false)
 
     Scaffold(
-        topBar = { ProfileTopBar() },
-        bottomBar = { ProfileBottomBar() },
+        topBar = { ProfileTopBar(isEnglish) },
+        bottomBar = { ProfileBottomBar(isEnglish) },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         if (isLoading) {
@@ -76,9 +75,10 @@ fun ProfileScreen(
                 email = emailState,
                 avatarIndex = avatarIndex,
                 onEditClick = onEditClick,
+                isEnglish = isEnglish,
                 onLogoutClick = {
-                    // Panggil fungsi logout di ViewModel
-                    viewModel.logout {
+                    // PERBAIKAN: Kirim context ke fungsi logout
+                    viewModel.logout(context) {
                         onNavigateToLogin()
                     }
                 }
@@ -87,28 +87,23 @@ fun ProfileScreen(
     }
 }
 
-/* ============================================================
-   TOP APP BAR
-============================================================ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileTopBar() {
+fun ProfileTopBar(isEnglish: Boolean) {
+    val context = LocalContext.current
     CenterAlignedTopAppBar(
-        navigationIcon = {
-            // Biasanya di halaman utama profil (Home) tidak ada tombol back
-            // Tapi jika ini submenu, biarkan ada.
-        },
         title = {
             Text(
-                text = "Profil",
+                text = if (isEnglish) "Profile" else "Profil",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onPrimary
             )
         },
         actions = {
-            // Opsional: Ikon Settings
-            IconButton(onClick = { /* TODO: Settings */ }) {
+            IconButton(onClick = {
+                context.startActivity(Intent(context, SettingsActivity::class.java))
+            }) {
                 Icon(Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onPrimary)
             }
         },
@@ -118,9 +113,6 @@ fun ProfileTopBar() {
     )
 }
 
-/* ============================================================
-   PROFILE CONTENT
-============================================================ */
 @Composable
 fun ProfileContent(
     modifier: Modifier = Modifier,
@@ -128,6 +120,7 @@ fun ProfileContent(
     email: String,
     avatarIndex: Int = 0,
     onEditClick: () -> Unit,
+    isEnglish: Boolean = false,
     onLogoutClick: () -> Unit
 ) {
     Column(
@@ -143,7 +136,6 @@ fun ProfileContent(
 
         Spacer(Modifier.height(16.dp))
 
-        // Username Handle (Bisa diambil dari nama atau field username khusus)
         Text(
             text = if (name.isNotEmpty()) "@${name.replace(" ", "").lowercase()}" else "@user",
             fontWeight = FontWeight.SemiBold,
@@ -153,39 +145,32 @@ fun ProfileContent(
 
         Spacer(Modifier.height(40.dp))
 
-        // Input Name - Display Only
         ProfileInputRowDisplay(
-            label = "Name :",
+            label = if (isEnglish) "Name :" else "Nama :",
             value = name.ifEmpty { "Loading..." },
             icon = Icons.Outlined.Person
         )
 
         Spacer(Modifier.height(24.dp))
 
-        // Input Email - Display Only
         ProfileInputRowDisplay(
-            label = "Email :",
+            label = if (isEnglish) "Email :" else "Email :",
             value = email.ifEmpty { "Loading..." },
             icon = Icons.Outlined.Email
         )
 
         Spacer(Modifier.height(50.dp))
 
-        // Tombol Edit
-        EditProfileButton(onEditClick = onEditClick)
+        EditProfileButton(onEditClick = onEditClick, isEnglish = isEnglish)
 
         Spacer(Modifier.height(16.dp))
 
-        // Tombol Logout
-        LogoutButton(onLogoutClick = onLogoutClick)
+        LogoutButton(onLogoutClick = onLogoutClick, isEnglish = isEnglish)
 
         Spacer(Modifier.height(30.dp))
     }
 }
 
-/* ============================================================
-   CUSTOM INPUT ROW - DISPLAY ONLY
-============================================================ */
 @Composable
 fun ProfileInputRowDisplay(
     label: String,
@@ -233,9 +218,6 @@ fun ProfileInputRowDisplay(
     }
 }
 
-/* ============================================================
-   PROFILE AVATAR
-============================================================ */
 @Composable
 fun ProfileAvatar(avatarIndex: Int) {
     val borderColor = MaterialTheme.colorScheme.primary
@@ -254,7 +236,6 @@ fun ProfileAvatar(avatarIndex: Int) {
                 .border(borderWidth, borderColor, CircleShape)
                 .padding(borderWidth)
         ) {
-            // Use selected avatar resource if available
             val ctx = LocalContext.current
             val resId = ctx.resources.getIdentifier("avatar$avatarIndex", "drawable", ctx.packageName)
             val painter = if (resId != 0) painterResource(id = resId) else painterResource(id = R.drawable.ic_launcher_foreground)
@@ -265,17 +246,14 @@ fun ProfileAvatar(avatarIndex: Int) {
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant) // Background jika transparan
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             )
         }
     }
 }
 
-/* ============================================================
-   BUTTONS
-============================================================ */
 @Composable
-fun EditProfileButton(onEditClick: () -> Unit) {
+fun EditProfileButton(onEditClick: () -> Unit, isEnglish: Boolean = false) {
     Button(
         onClick = onEditClick,
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
@@ -285,7 +263,7 @@ fun EditProfileButton(onEditClick: () -> Unit) {
         shape = RoundedCornerShape(8.dp)
     ) {
         Text(
-            text = "EDIT PROFIL",
+            text = if (isEnglish) "EDIT PROFILE" else "UBAH PROFIL",
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
             color = MaterialTheme.colorScheme.onPrimary
@@ -294,7 +272,7 @@ fun EditProfileButton(onEditClick: () -> Unit) {
 }
 
 @Composable
-fun LogoutButton(onLogoutClick: () -> Unit) {
+fun LogoutButton(onLogoutClick: () -> Unit, isEnglish: Boolean = false) {
     OutlinedButton(
         onClick = onLogoutClick,
         modifier = Modifier
@@ -314,18 +292,15 @@ fun LogoutButton(onLogoutClick: () -> Unit) {
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = "LOG OUT",
+            text = if (isEnglish) "LOG OUT" else "KELUAR",
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp
         )
     }
 }
 
-/* ============================================================
-   BOTTOM NAVIGATION
-============================================================ */
 @Composable
-fun ProfileBottomBar() {
+fun ProfileBottomBar(isEnglish: Boolean = false) {
     Column {
         HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
         val context = LocalContext.current
@@ -333,7 +308,7 @@ fun ProfileBottomBar() {
         NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
             NavigationBarItem(
                 icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                label = { Text("Home") },
+                label = { Text(if (isEnglish) "Home" else "Beranda") },
                 selected = false,
                 onClick = {
                     val intent = Intent(context, HomeActivity::class.java)
@@ -344,7 +319,7 @@ fun ProfileBottomBar() {
 
             NavigationBarItem(
                 icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-                label = { Text("Search") },
+                label = { Text(if (isEnglish) "Search" else "Pencarian") },
                 selected = false,
                 onClick = {
                     val intent = Intent(context, SearchActivity::class.java)
@@ -355,7 +330,7 @@ fun ProfileBottomBar() {
 
             NavigationBarItem(
                 icon = { Icon(Icons.Default.Favorite, contentDescription = "Favorite") },
-                label = { Text("Favorite") },
+                label = { Text(if (isEnglish) "Favorite" else "Favorit") },
                 selected = false,
                 onClick = {
                     val intent = Intent(context, FavoriteActivity::class.java)
@@ -365,7 +340,7 @@ fun ProfileBottomBar() {
             )
             NavigationBarItem(
                 icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-                label = { Text("Profile") },
+                label = { Text(if (isEnglish) "Profile" else "Profil") },
                 selected = true,
                 onClick = {},
                 colors = NavigationBarItemDefaults.colors(

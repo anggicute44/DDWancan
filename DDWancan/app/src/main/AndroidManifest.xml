@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="id.app.ddwancan">
 
+    <!-- Internet untuk API & Firebase -->
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -11,7 +13,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DDWancan">
 
-        <!-- ✅ ENTRY POINT (WAJIB SATU SAJA) -->
+        <!-- ============================= -->
+        <!-- ENTRY POINT (LAUNCHER) -->
+        <!-- ============================= -->
         <activity
             android:name=".view.activity.WelcomeActivity"
             android:exported="true">
@@ -23,28 +27,55 @@
 
         </activity>
 
-        <!-- AUTH -->
+        <!-- ============================= -->
+        <!-- AUTH & SECURITY -->
+        <!-- ============================= -->
         <activity
             android:name=".view.activity.LoginActivity"
             android:exported="false" />
 
-        <!-- HOME -->
+        <activity
+            android:name=".view.activity.RegisterActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".view.activity.FingerprintActivity"
+            android:exported="false" />
+
+        <!-- ============================= -->
+        <!-- HOME (INI YANG SEBELUMNYA HILANG / SALAH) -->
+        <!-- ============================= -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+
+        <!-- ============================= -->
+        <!-- USER FEATURES -->
+        <!-- ============================= -->
         <activity
             android:name=".view.activity.HomeActivity"
             android:exported="false" />
 
-        <!-- BERITA API -->
         <activity
             android:name=".view.activity.BeritaActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".view.activity.ArticleDetailActivity"
+            android:exported="false" />
 
-        <!-- CATEGORY -->
         <activity
             android:name=".view.activity.CategoryActivity"
             android:exported="false" />
 
-        <!-- PROFILE -->
+        <activity
+            android:name=".view.activity.SearchActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".view.activity.FavoriteActivity"
+            android:exported="false" />
+
         <activity
             android:name=".view.activity.ProfileActivity"
             android:exported="false" />
@@ -53,43 +84,43 @@
             android:name=".view.activity.EditProfileActivity"
             android:exported="false" />
 
+        <!-- PERBAIKAN: Menambahkan SettingsActivity yang hilang -->
         <activity
-            android:name=".view.activity.ArticleDetailActivity"
+            android:name=".view.activity.SettingsActivity"
             android:exported="false" />
 
-
-        <!-- BOTTOM NAV -->
-        <activity android:name=".view.activity.SearchActivity" />
-        <activity android:name=".view.activity.FavoriteActivity" />
-
-        <activity
-            android:name=".view.activity.AdminDashboardActivity"
-            android:label="Admin Dashboard" />
-
+        <!-- ============================= -->
+        <!-- ADMIN -->
+        <!-- ============================= -->
         <activity
             android:name=".view.activity.AdminLoginActivity"
+            android:exported="false"
             android:label="Admin Login" />
 
         <activity
+            android:name=".view.activity.AdminDashboardActivity"
+            android:exported="false"
+            android:label="Admin Dashboard" />
+
+        <activity
             android:name=".view.activity.AdminHomeActivity"
+            android:exported="false"
             android:label="Admin Home" />
 
         <activity
             android:name=".view.activity.ManageUsersActivity"
+            android:exported="false"
             android:label="Manage Users" />
 
         <activity
-            android:name=".view.activity.RegisterActivity"
-            android:label="Manage Articles" />
-
-        <activity
-            android:name=".view.activity.ManageCommentsActivity"             android:label="Manage Comments"  />
+            android:name=".view.activity.ManageCommentsActivity"
+            android:exported="false"
+            android:label="Manage Comments" />
 
         <activity
             android:name=".view.activity.AdminUpdateNewsActivity"
+            android:exported="false"
             android:label="Admin Update News" />
-
-
 
     </application>
 

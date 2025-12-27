@@ -9,6 +9,10 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.QrCode2 // Jika error, ganti QrCode biasa
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,6 +30,10 @@ fun ShareQrDialog(
 ) {
     // Komponen Dialog akan membuat background layar belakang menjadi gelap otomatis
     Dialog(onDismissRequest = onDismiss) {
+
+        val context = LocalContext.current
+        val settings = remember { id.app.ddwancan.data.local.SettingsPreference(context) }
+        val isEnglish by settings.isEnglish.collectAsState(initial = false)
 
         // Kartu Putih Utama
         Card(
@@ -46,7 +54,7 @@ fun ShareQrDialog(
                 // --- 1. HEADER (Judul & Tombol Close) ---
                 Box(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "Share Article",
+                        text = if (isEnglish) "Share Article" else "Bagikan Artikel",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
@@ -96,7 +104,7 @@ fun ShareQrDialog(
 
                 // --- 3. TEKS INSTRUKSI ---
                 Text(
-                    text = "Scan to read on another device",
+                    text = if (isEnglish) "Scan to read on another device" else "Pindai untuk membaca di perangkat lain",
                     fontSize = 14.sp,
                     color = Color.Gray,
                     textAlign = TextAlign.Center
@@ -114,7 +122,7 @@ fun ShareQrDialog(
                         .height(48.dp)
                 ) {
                     Text(
-                        text = "Done",
+                        text = if (isEnglish) "Done" else "Selesai",
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         color = Color.White
