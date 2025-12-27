@@ -12,6 +12,9 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import android.content.Intent
 import id.app.ddwancan.view.activity.ArticleDetailActivity
@@ -42,13 +45,17 @@ import id.app.ddwancan.ui.theme.DDwancanTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoriteScreen() {
+    val context = LocalContext.current
+    val settings = remember { id.app.ddwancan.data.local.SettingsPreference(context) }
+    val isEnglish by settings.isEnglish.collectAsState(initial = false)
     Scaffold(
         topBar = { FavoriteTopBar() },
         bottomBar = { BottomNavigationBar(NavRoutes.FAVORITE) },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         FavoriteContent(
-            modifier = Modifier.padding(padding)
+            modifier = Modifier.padding(padding),
+            isEnglish = isEnglish
         )
     }
 }
@@ -82,7 +89,7 @@ fun FavoriteTopBar() {
    CONTENT
 ============================================================ */
 @Composable
-fun FavoriteContent(modifier: Modifier = Modifier, viewModel: FavoriteViewModel = viewModel()) {
+fun FavoriteContent(modifier: Modifier = Modifier, viewModel: FavoriteViewModel = viewModel(), isEnglish: Boolean = false) {
     // Muat data saat pertama kali
     LaunchedEffect(Unit) {
         viewModel.loadFavorites()
@@ -98,14 +105,14 @@ fun FavoriteContent(modifier: Modifier = Modifier, viewModel: FavoriteViewModel 
 
         item {
             Spacer(Modifier.height(16.dp))
-            Text("Artikel Tersimpan", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
-            Text("Daftar berita favoritmu", fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
+            Text(if (isEnglish) "Saved Articles" else "Artikel Tersimpan", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+            Text(if (isEnglish) "Your saved articles" else "Daftar berita favoritmu", fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
             Spacer(Modifier.height(12.dp))
         }
 
         if (favorites.isEmpty()) {
             item {
-                Text("Belum ada artikel favorit", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), modifier = Modifier.padding(8.dp))
+                Text(if (isEnglish) "No favorite articles yet" else "Belum ada artikel favorit", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), modifier = Modifier.padding(8.dp))
             }
         } else {
             items(favorites) { article ->

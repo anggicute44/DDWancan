@@ -62,6 +62,7 @@ fun EditProfileScreen(
     Scaffold(
         topBar = {
             EditProfileTopBar(
+                isEnglish = isEnglish,
                 onBackClick = onBackClick,
                 onSettingsClick = { showSettings = true }
             )
@@ -106,6 +107,7 @@ fun EditProfileScreen(
                 onConfirmPasswordChange = { confirmPassword = it },
                 selectedAvatar = selectedAvatar,
                 onSelectedAvatarChange = { selectedAvatar = it },
+                isEnglish = isEnglish,
                 onSaveClick = {
                     viewModel.updateProfile(
                         newName = nameState.value,
@@ -127,6 +129,7 @@ fun EditProfileScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileTopBar(
+    isEnglish: Boolean,
     onBackClick: () -> Unit,
     onSettingsClick: () -> Unit
 ) {
@@ -141,7 +144,7 @@ fun EditProfileTopBar(
         },
         title = {
             Text(
-                text = "Edit Profil",
+                text = if (isEnglish) "Edit Profile" else "Ubah Profil",
                 fontWeight = FontWeight.SemiBold
             )
         },
@@ -225,6 +228,7 @@ fun EditProfileContent(
     onConfirmPasswordChange: (String) -> Unit,
     selectedAvatar: Int,
     onSelectedAvatarChange: (Int) -> Unit,
+    isEnglish: Boolean = false,
     onSaveClick: () -> Unit,
     onCancelClick: () -> Unit
 ) {
@@ -239,21 +243,21 @@ fun EditProfileContent(
 
         Spacer(Modifier.height(24.dp))
 
-        Text("Informasi Pribadi", fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth())
+        Text(if (isEnglish) "Personal Information" else "Informasi Pribadi", fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
-        ProfileInputField(label = "Nama", value = name, onValueChange = onNameChange, icon = Icons.Outlined.Person)
+        ProfileInputField(label = if (isEnglish) "Name" else "Nama", value = name, onValueChange = onNameChange, icon = Icons.Outlined.Person)
         Spacer(Modifier.height(8.dp))
-        ProfileInputField(label = "Email", value = email, onValueChange = onEmailChange, icon = Icons.Outlined.Email)
+        ProfileInputField(label = if (isEnglish) "Email" else "Email", value = email, onValueChange = onEmailChange, icon = Icons.Outlined.Email)
 
         Spacer(Modifier.height(24.dp))
 
-        Text("Ganti Password", fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth())
+        Text(if (isEnglish) "Change Password" else "Ubah Password", fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
-        ProfileInputField(label = "Password Lama", value = oldPassword, onValueChange = onOldPasswordChange, icon = Icons.Outlined.Lock, isPassword = true)
+        ProfileInputField(label = if (isEnglish) "Old Password" else "Password Lama", value = oldPassword, onValueChange = onOldPasswordChange, icon = Icons.Outlined.Lock, isPassword = true)
         Spacer(Modifier.height(8.dp))
-        ProfileInputField(label = "Password Baru", value = password, onValueChange = onPasswordChange, icon = Icons.Outlined.Lock, isPassword = true)
+        ProfileInputField(label = if (isEnglish) "New Password" else "Password Baru", value = password, onValueChange = onPasswordChange, icon = Icons.Outlined.Lock, isPassword = true)
         Spacer(Modifier.height(8.dp))
-        ProfileInputField(label = "Konfirmasi Password Baru", value = confirmPassword, onValueChange = onConfirmPasswordChange, icon = Icons.Outlined.Lock, isPassword = true)
+        ProfileInputField(label = if (isEnglish) "Confirm New Password" else "Konfirmasi Password Baru", value = confirmPassword, onValueChange = onConfirmPasswordChange, icon = Icons.Outlined.Lock, isPassword = true)
 
         Spacer(Modifier.height(32.dp))
 
@@ -266,14 +270,14 @@ fun EditProfileContent(
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Simpan")
+                Text(if (isEnglish) "Save" else "Simpan")
             }
             OutlinedButton(
                 onClick = onCancelClick,
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Batal")
+                Text(if (isEnglish) "Cancel" else "Batal")
             }
         }
     }

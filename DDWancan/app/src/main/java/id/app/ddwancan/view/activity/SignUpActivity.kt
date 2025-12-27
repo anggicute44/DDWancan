@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -44,6 +45,9 @@ class SignUpActivity : ComponentActivity() {
 
 @Composable
 fun SignUpScreen() {
+    val context = LocalContext.current
+    val settings = remember { id.app.ddwancan.data.local.SettingsPreference(context) }
+    val isEnglish by settings.isEnglish.collectAsState(initial = false)
     // Warna Utama (Biru - Konsisten dengan halaman sebelumnya)
     val PrimaryBlue = Color(0xFF1976D2)
 
@@ -80,7 +84,7 @@ fun SignUpScreen() {
             OutlinedTextField(
                 value = emailOrPhone,
                 onValueChange = { emailOrPhone = it },
-                label = { Text("Phone / Email", color = Color.Gray) },
+                label = { Text(if (isEnglish) "Phone / Email" else "Nomor / Email", color = Color.Gray) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -97,7 +101,7 @@ fun SignUpScreen() {
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password", color = Color.Gray) },
+                label = { Text(if (isEnglish) "Password" else "Kata Sandi", color = Color.Gray) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 visualTransformation = PasswordVisualTransformation(), // Menjadi titik-titik
@@ -116,7 +120,7 @@ fun SignUpScreen() {
             OutlinedTextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
-                label = { Text("Confirm Password", color = Color.Gray) },
+                label = { Text(if (isEnglish) "Confirm Password" else "Konfirmasi Kata Sandi", color = Color.Gray) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 visualTransformation = PasswordVisualTransformation(), // Menjadi titik-titik
@@ -141,7 +145,7 @@ fun SignUpScreen() {
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
             ) {
                 Text(
-                    text = "Sign Up",
+                    text = if (isEnglish) "Sign Up" else "Daftar",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -159,13 +163,13 @@ fun SignUpScreen() {
             // Layout teks footer agar rapi di tengah
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "Already have an account?",
+                    text = if (isEnglish) "Already have an account?" else "Sudah punya akun?",
                     fontSize = 14.sp,
                     color = Color.Black
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Log In",
+                    text = if (isEnglish) "Log In" else "Masuk",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = PrimaryBlue,

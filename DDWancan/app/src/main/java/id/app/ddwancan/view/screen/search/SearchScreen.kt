@@ -16,6 +16,10 @@ import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import id.app.ddwancan.data.local.SettingsPreference
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,6 +48,10 @@ import id.app.ddwancan.view.screen.home.ApiNewsCard
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen() {
+    val context = LocalContext.current
+    val settings = remember { SettingsPreference(context) }
+    val isEnglish by settings.isEnglish.collectAsState(initial = false)
+
     Scaffold(
         topBar = { SearchTopBar() },
         bottomBar = { BottomNavigationBar(NavRoutes.SEARCH) },
@@ -106,11 +114,15 @@ fun SearchContent(modifier: Modifier = Modifier, viewModel: NewsViewModel = view
     ) {
 
         item {
-            Text("Cari Berita", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+            val context = LocalContext.current
+            val settings = remember { SettingsPreference(context) }
+            val isEnglish by settings.isEnglish.collectAsState(initial = false)
+
+            Text(if (isEnglish) "Search News" else "Cari Berita", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
             Spacer(Modifier.height(12.dp))
             SearchBarField(query) { newVal -> query = newVal }
             Spacer(Modifier.height(20.dp))
-            Text("Hasil Pencarian", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground)
+            Text(if (isEnglish) "Search Results" else "Hasil Pencarian", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground)
             Spacer(Modifier.height(12.dp))
         }
 
@@ -141,7 +153,12 @@ fun SearchBarField(value: TextFieldValue, onValueChange: (TextFieldValue) -> Uni
     TextField(
         value = value,
         onValueChange = onValueChange,
-        placeholder = { Text("Cari berita...") },
+        placeholder = { 
+            val context = LocalContext.current
+            val settings = remember { SettingsPreference(context) }
+            val isEnglish by settings.isEnglish.collectAsState(initial = false)
+            Text(if (isEnglish) "Search news..." else "Cari berita...")
+        },
         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
         modifier = Modifier
             .fillMaxWidth()

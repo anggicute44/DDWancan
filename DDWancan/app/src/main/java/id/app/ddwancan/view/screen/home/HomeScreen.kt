@@ -13,12 +13,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import id.app.ddwancan.data.local.SettingsPreference
+import id.app.ddwancan.navigation.BottomNavigationBar
+import id.app.ddwancan.navigation.NavRoutes
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -39,6 +45,8 @@ fun HomeScreen(
     viewModel: NewsViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val settings = remember { SettingsPreference(context) }
+    val isEnglish by settings.isEnglish.collectAsState(initial = false)
     val newsList by viewModel.newsList
     val isLoading by viewModel.isLoading
     val errorMessage by viewModel.errorMessage
@@ -62,39 +70,39 @@ fun HomeScreen(
 
     Scaffold(
         topBar = { HomeTopBar(onFilterClick = { showFilterDialog = true }) },
-        bottomBar = { HomeBottomBar(context) }
+        bottomBar = { BottomNavigationBar(NavRoutes.HOME) }
     ) { padding ->
 
         if (showFilterDialog) {
             AlertDialog(
                 onDismissRequest = { showFilterDialog = false },
-                title = { Text("Filter News") },
+                title = { Text(if (isEnglish) "Filter News" else "Filter Berita") },
                 text = {
                     Column {
                         OutlinedTextField(
                             value = authorFilter,
                             onValueChange = { authorFilter = it },
-                            label = { Text("Author contains") },
+                            label = { Text(if (isEnglish) "Author contains" else "Penulis mengandung") },
                             singleLine = true
                         )
                         Spacer(Modifier.height(8.dp))
                         OutlinedTextField(
                             value = dateFrom,
                             onValueChange = { dateFrom = it },
-                            label = { Text("Published from (YYYY-MM-DD)") },
+                            label = { Text(if (isEnglish) "Published from (YYYY-MM-DD)" else "Diterbitkan dari (YYYY-MM-DD)") },
                             singleLine = true
                         )
                         Spacer(Modifier.height(8.dp))
                         OutlinedTextField(
                             value = dateTo,
                             onValueChange = { dateTo = it },
-                            label = { Text("Published to (YYYY-MM-DD)") },
+                            label = { Text(if (isEnglish) "Published to (YYYY-MM-DD)" else "Diterbitkan sampai (YYYY-MM-DD)") },
                             singleLine = true
                         )
                     }
                 },
                 confirmButton = {
-                    TextButton(onClick = { showFilterDialog = false }) { Text("Apply") }
+                    TextButton(onClick = { showFilterDialog = false }) { Text(if (isEnglish) "Apply" else "Terapkan") }
                 },
                 dismissButton = {
                     TextButton(onClick = {
@@ -102,7 +110,7 @@ fun HomeScreen(
                         dateFrom = ""
                         dateTo = ""
                         showFilterDialog = false
-                    }) { Text("Clear") }
+                    }) { Text(if (isEnglish) "Clear" else "Kosongkan") }
                 }
             )
         }
@@ -124,9 +132,9 @@ fun HomeScreen(
                 ) {
                     item {
                         Spacer(Modifier.height(16.dp))
-                        CategoryChips(selectedCategory = selectedCategory, onCategoryClick = { selectedCategory = it })
+                        CategoryChips(selectedCategory = selectedCategory, onCategoryClick = { selectedCategory = it }, isEnglish = isEnglish)
                         Spacer(Modifier.height(24.dp))
-                        Text("News Today", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        Text(if (isEnglish) "News Today" else "Berita Hari Ini", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(12.dp))
                         BreakingNewsImage()
                         Spacer(Modifier.height(24.dp))
@@ -221,12 +229,13 @@ fun BreakingNewsImage() {
 @Composable
 fun CategoryChips(
     selectedCategory: String?,
-    onCategoryClick: (String?) -> Unit
+    onCategoryClick: (String?) -> Unit,
+    isEnglish: Boolean = false
 ) {
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
 
         item {
-            CategoryChip("All", selectedCategory == null) {
+            CategoryChip(if (isEnglish) "All" else "Semua", selectedCategory == null) {
                 onCategoryClick(null)
             }
         }
@@ -330,21 +339,25 @@ fun ApiNewsCard(
 ============================================================ */
 @Composable
 fun HomeBottomBar(context: android.content.Context) {
+    val ctx = LocalContext.current
+    val settings = remember { SettingsPreference(ctx) }
+    val isEnglish by settings.isEnglish.collectAsState(initial = false)
+
     Column {
         HorizontalDivider(color = MaterialTheme.colorScheme.outline)
         NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
 
-            NavItem(Icons.Default.Home, "Home", true) {}
+            NavItem(Icons.Default.Home, if (isEnglish) "Home" else "Beranda", true) {}
 
-            NavItem(Icons.Default.Search, "Search") {
+            NavItem(Icons.Default.Search, if (isEnglish) "Search" else "Pencarian") {
                 context.startActivity(Intent(context, SearchActivity::class.java))
             }
 
-            NavItem(Icons.Default.Favorite, "Favorite") {
+            NavItem(Icons.Default.Favorite, if (isEnglish) "Favorite" else "Favorit") {
                 context.startActivity(Intent(context, FavoriteActivity::class.java))
             }
 
-            NavItem(Icons.Default.Person, "Profile") {
+            NavItem(Icons.Default.Person, if (isEnglish) "Profile" else "Profil") {
                 context.startActivity(Intent(context, ProfileActivity::class.java))
             }
         }

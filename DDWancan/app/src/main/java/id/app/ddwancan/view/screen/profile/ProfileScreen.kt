@@ -49,10 +49,12 @@ fun ProfileScreen(
     val isLoading = viewModel.isLoading.value
     // PERBAIKAN: Dapatkan context di sini
     val context = LocalContext.current
+    val settings = remember { id.app.ddwancan.data.local.SettingsPreference(context) }
+    val isEnglish by settings.isEnglish.collectAsState(initial = false)
 
     Scaffold(
-        topBar = { ProfileTopBar() },
-        bottomBar = { ProfileBottomBar() },
+        topBar = { ProfileTopBar(isEnglish) },
+        bottomBar = { ProfileBottomBar(isEnglish) },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         if (isLoading) {
@@ -73,6 +75,7 @@ fun ProfileScreen(
                 email = emailState,
                 avatarIndex = avatarIndex,
                 onEditClick = onEditClick,
+                isEnglish = isEnglish,
                 onLogoutClick = {
                     // PERBAIKAN: Kirim context ke fungsi logout
                     viewModel.logout(context) {
@@ -86,12 +89,12 @@ fun ProfileScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileTopBar() {
+fun ProfileTopBar(isEnglish: Boolean) {
     val context = LocalContext.current
     CenterAlignedTopAppBar(
         title = {
             Text(
-                text = "Profil",
+                text = if (isEnglish) "Profile" else "Profil",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onPrimary
@@ -117,6 +120,7 @@ fun ProfileContent(
     email: String,
     avatarIndex: Int = 0,
     onEditClick: () -> Unit,
+    isEnglish: Boolean = false,
     onLogoutClick: () -> Unit
 ) {
     Column(
@@ -142,7 +146,7 @@ fun ProfileContent(
         Spacer(Modifier.height(40.dp))
 
         ProfileInputRowDisplay(
-            label = "Name :",
+            label = if (isEnglish) "Name :" else "Nama :",
             value = name.ifEmpty { "Loading..." },
             icon = Icons.Outlined.Person
         )
@@ -150,18 +154,18 @@ fun ProfileContent(
         Spacer(Modifier.height(24.dp))
 
         ProfileInputRowDisplay(
-            label = "Email :",
+            label = if (isEnglish) "Email :" else "Email :",
             value = email.ifEmpty { "Loading..." },
             icon = Icons.Outlined.Email
         )
 
         Spacer(Modifier.height(50.dp))
 
-        EditProfileButton(onEditClick = onEditClick)
+        EditProfileButton(onEditClick = onEditClick, isEnglish = isEnglish)
 
         Spacer(Modifier.height(16.dp))
 
-        LogoutButton(onLogoutClick = onLogoutClick)
+        LogoutButton(onLogoutClick = onLogoutClick, isEnglish = isEnglish)
 
         Spacer(Modifier.height(30.dp))
     }
@@ -249,7 +253,7 @@ fun ProfileAvatar(avatarIndex: Int) {
 }
 
 @Composable
-fun EditProfileButton(onEditClick: () -> Unit) {
+fun EditProfileButton(onEditClick: () -> Unit, isEnglish: Boolean = false) {
     Button(
         onClick = onEditClick,
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
@@ -259,7 +263,7 @@ fun EditProfileButton(onEditClick: () -> Unit) {
         shape = RoundedCornerShape(8.dp)
     ) {
         Text(
-            text = "EDIT PROFIL",
+            text = if (isEnglish) "EDIT PROFILE" else "UBAH PROFIL",
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
             color = MaterialTheme.colorScheme.onPrimary
@@ -268,7 +272,7 @@ fun EditProfileButton(onEditClick: () -> Unit) {
 }
 
 @Composable
-fun LogoutButton(onLogoutClick: () -> Unit) {
+fun LogoutButton(onLogoutClick: () -> Unit, isEnglish: Boolean = false) {
     OutlinedButton(
         onClick = onLogoutClick,
         modifier = Modifier
@@ -288,7 +292,7 @@ fun LogoutButton(onLogoutClick: () -> Unit) {
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = "LOG OUT",
+            text = if (isEnglish) "LOG OUT" else "KELUAR",
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp
         )
@@ -296,7 +300,7 @@ fun LogoutButton(onLogoutClick: () -> Unit) {
 }
 
 @Composable
-fun ProfileBottomBar() {
+fun ProfileBottomBar(isEnglish: Boolean = false) {
     Column {
         HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
         val context = LocalContext.current
@@ -304,7 +308,7 @@ fun ProfileBottomBar() {
         NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
             NavigationBarItem(
                 icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                label = { Text("Home") },
+                label = { Text(if (isEnglish) "Home" else "Beranda") },
                 selected = false,
                 onClick = {
                     val intent = Intent(context, HomeActivity::class.java)
@@ -315,7 +319,7 @@ fun ProfileBottomBar() {
 
             NavigationBarItem(
                 icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-                label = { Text("Search") },
+                label = { Text(if (isEnglish) "Search" else "Pencarian") },
                 selected = false,
                 onClick = {
                     val intent = Intent(context, SearchActivity::class.java)
@@ -326,7 +330,7 @@ fun ProfileBottomBar() {
 
             NavigationBarItem(
                 icon = { Icon(Icons.Default.Favorite, contentDescription = "Favorite") },
-                label = { Text("Favorite") },
+                label = { Text(if (isEnglish) "Favorite" else "Favorit") },
                 selected = false,
                 onClick = {
                     val intent = Intent(context, FavoriteActivity::class.java)
@@ -336,7 +340,7 @@ fun ProfileBottomBar() {
             )
             NavigationBarItem(
                 icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-                label = { Text("Profile") },
+                label = { Text(if (isEnglish) "Profile" else "Profil") },
                 selected = true,
                 onClick = {},
                 colors = NavigationBarItemDefaults.colors(
