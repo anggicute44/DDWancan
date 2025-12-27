@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import id.app.ddwancan.data.model.Comment
+import id.app.ddwancan.data.local.SettingsPreference
 import id.app.ddwancan.ui.theme.DDwancanTheme
 import id.app.ddwancan.view.screen.admin.ManageCommentsScreen
 
@@ -28,7 +29,11 @@ class ManageCommentsActivity : ComponentActivity() {
         fetchAllComments()
 
         setContent {
-            DDwancanTheme {
+            val context = this@ManageCommentsActivity
+            val settings = remember { SettingsPreference(context) }
+            val isDarkMode by settings.isDarkMode.collectAsState(initial = false)
+
+            DDwancanTheme(darkTheme = isDarkMode) {
                 var showDialog by remember { mutableStateOf(false) }
                 var selectedPath by remember { mutableStateOf<String?>(null) }
 

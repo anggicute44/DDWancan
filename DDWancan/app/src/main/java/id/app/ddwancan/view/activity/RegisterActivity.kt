@@ -4,8 +4,10 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import id.app.ddwancan.data.local.SettingsPreference
 import id.app.ddwancan.ui.theme.DDwancanTheme
 import id.app.ddwancan.view.screen.auth.RegisterScreen
 
@@ -21,13 +23,17 @@ class RegisterActivity : ComponentActivity() {
         db = FirebaseFirestore.getInstance()
 
         setContent {
-            DDwancanTheme {
+            val context = this@RegisterActivity
+            val settings = remember { SettingsPreference(context) }
+            val isDarkMode by settings.isDarkMode.collectAsState(initial = false)
+            
+            DDwancanTheme(darkTheme = isDarkMode) {
                 RegisterScreen(
                     onRegisterClick = { name, email, password ->
                         performRegister(name, email, password)
                     },
                     onBackToLoginClick = {
-                        finish() // Kembali ke LoginActivity
+                        finish()
                     }
                 )
             }

@@ -3,10 +3,12 @@ package id.app.ddwancan.view.activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels // Perlu dependency activity-ktx atau lifecycle-viewmodel-compose
+import androidx.activity.viewModels
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.*
+import id.app.ddwancan.data.local.SettingsPreference
 import id.app.ddwancan.data.model.NewsViewModel
-import id.app.ddwancan.ui.theme.DDwancanTheme // Sesuaikan dengan nama project Anda
+import id.app.ddwancan.ui.theme.DDwancanTheme
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -26,7 +28,11 @@ class BeritaActivity : ComponentActivity() {
         viewModel.fetchNews(category)
 
         setContent {
-            DDwancanTheme {
+            val context = this@BeritaActivity
+            val settings = remember { SettingsPreference(context) }
+            val isDarkMode by settings.isDarkMode.collectAsState(initial = false)
+            
+            DDwancanTheme(darkTheme = isDarkMode) {
                 NewsListScreen(viewModel = viewModel)
             }
         }

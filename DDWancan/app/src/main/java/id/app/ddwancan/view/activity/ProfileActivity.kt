@@ -4,10 +4,11 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.*
+import id.app.ddwancan.data.local.SettingsPreference
 import id.app.ddwancan.ui.theme.DDwancanTheme
 import id.app.ddwancan.view.screen.profile.ProfileScreen
 
-// PERBAIKAN: Menambahkan import yang hilang
 import id.app.ddwancan.view.activity.EditProfileActivity
 import id.app.ddwancan.view.activity.LoginActivity
 
@@ -16,10 +17,13 @@ class ProfileActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            DDwancanTheme {
+            val context = this@ProfileActivity
+            val settings = remember { SettingsPreference(context) }
+            val isDarkMode by settings.isDarkMode.collectAsState(initial = false)
+            
+            DDwancanTheme(darkTheme = isDarkMode) {
                 ProfileScreen(
                     onEditClick = {
-                        // Navigasi ke EditProfileActivity
                         val intent = Intent(this@ProfileActivity, EditProfileActivity::class.java)
                         startActivity(intent)
                     },

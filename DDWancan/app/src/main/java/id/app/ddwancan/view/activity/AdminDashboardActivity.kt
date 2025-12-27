@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.*
+import id.app.ddwancan.data.local.SettingsPreference
 import id.app.ddwancan.ui.theme.DDwancanTheme
 import id.app.ddwancan.view.screen.admin.AdminDashboardScreen
 
@@ -14,7 +16,11 @@ class AdminDashboardActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            DDwancanTheme {
+            val context = this@AdminDashboardActivity
+            val settings = remember { SettingsPreference(context) }
+            val isDarkMode by settings.isDarkMode.collectAsState(initial = false)
+
+            DDwancanTheme(darkTheme = isDarkMode) {
                 AdminDashboardScreen(
                     onMenuClick = { menuId ->
                         handleMenuNavigation(menuId)

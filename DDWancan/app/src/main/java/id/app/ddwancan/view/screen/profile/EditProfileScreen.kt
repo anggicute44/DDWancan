@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import id.app.ddwancan.viewmodel.ProfileViewModel
+import id.app.ddwancan.data.local.SettingsPreference
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +39,7 @@ fun EditProfileScreen(
     viewModel: ProfileViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val settings = remember { SettingsPreference(context) }
 
     val nameState = viewModel.name
     val emailState = viewModel.email
@@ -49,8 +51,9 @@ fun EditProfileScreen(
     var selectedAvatar by remember { mutableStateOf(viewModel.avatar.value) }
 
     var showSettings by remember { mutableStateOf(false) }
-    var isDarkMode by remember { mutableStateOf(false) }
-    var isEnglish by remember { mutableStateOf(false) }
+    
+    val isDarkMode by settings.isDarkMode.collectAsState(initial = false)
+    val isEnglish by settings.isEnglish.collectAsState(initial = false)
 
     LaunchedEffect(viewModel.avatar.value) {
         selectedAvatar = viewModel.avatar.value
@@ -70,11 +73,9 @@ fun EditProfileScreen(
                 isDarkMode = isDarkMode,
                 isEnglish = isEnglish,
                 onDarkModeChange = {
-                    isDarkMode = it
                     onDarkModeChange(it)
                 },
                 onLanguageChange = {
-                    isEnglish = it
                     onLanguageChange(it)
                 },
                 onDismiss = { showSettings = false }

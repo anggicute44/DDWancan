@@ -33,24 +33,22 @@ import id.app.ddwancan.R
 import id.app.ddwancan.view.activity.FavoriteActivity
 import id.app.ddwancan.view.activity.HomeActivity
 import id.app.ddwancan.view.activity.SearchActivity
-import id.app.ddwancan.view.activity.SettingsActivity // <-- IMPORT DITAMBAHKAN
+import id.app.ddwancan.view.activity.SettingsActivity
 import id.app.ddwancan.viewmodel.ProfileViewModel
 
-/* ============================================================
-   MAIN PROFILE SCREEN
-============================================================ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     onEditClick: () -> Unit,
-    onNavigateToLogin: () -> Unit, // Callback untuk kembali ke Login
-    viewModel: ProfileViewModel = viewModel() // Inject ViewModel
+    onNavigateToLogin: () -> Unit,
+    viewModel: ProfileViewModel = viewModel()
 ) {
-    // Mengambil data dari ViewModel (Realtime / dari Firestore)
     val nameState = viewModel.name.value
     val emailState = viewModel.email.value
     val avatarIndex = viewModel.avatar.value
     val isLoading = viewModel.isLoading.value
+    // PERBAIKAN: Dapatkan context di sini
+    val context = LocalContext.current
 
     Scaffold(
         topBar = { ProfileTopBar() },
@@ -76,8 +74,8 @@ fun ProfileScreen(
                 avatarIndex = avatarIndex,
                 onEditClick = onEditClick,
                 onLogoutClick = {
-                    // Panggil fungsi logout di ViewModel
-                    viewModel.logout {
+                    // PERBAIKAN: Kirim context ke fungsi logout
+                    viewModel.logout(context) {
                         onNavigateToLogin()
                     }
                 }
@@ -86,17 +84,11 @@ fun ProfileScreen(
     }
 }
 
-/* ============================================================
-   TOP APP BAR
-============================================================ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileTopBar() {
-    val context = LocalContext.current // Dapatkan context di sini
+    val context = LocalContext.current
     CenterAlignedTopAppBar(
-        navigationIcon = {
-            // Biasanya di halaman utama profil (Home) tidak ada tombol back
-        },
         title = {
             Text(
                 text = "Profil",
@@ -106,7 +98,6 @@ fun ProfileTopBar() {
             )
         },
         actions = {
-            // PERBAIKAN: Tambahkan aksi untuk membuka SettingsActivity
             IconButton(onClick = {
                 context.startActivity(Intent(context, SettingsActivity::class.java))
             }) {
@@ -119,9 +110,6 @@ fun ProfileTopBar() {
     )
 }
 
-/* ============================================================
-   PROFILE CONTENT
-============================================================ */
 @Composable
 fun ProfileContent(
     modifier: Modifier = Modifier,
@@ -144,7 +132,6 @@ fun ProfileContent(
 
         Spacer(Modifier.height(16.dp))
 
-        // Username Handle (Bisa diambil dari nama atau field username khusus)
         Text(
             text = if (name.isNotEmpty()) "@${name.replace(" ", "").lowercase()}" else "@user",
             fontWeight = FontWeight.SemiBold,
@@ -154,7 +141,6 @@ fun ProfileContent(
 
         Spacer(Modifier.height(40.dp))
 
-        // Input Name - Display Only
         ProfileInputRowDisplay(
             label = "Name :",
             value = name.ifEmpty { "Loading..." },
@@ -163,7 +149,6 @@ fun ProfileContent(
 
         Spacer(Modifier.height(24.dp))
 
-        // Input Email - Display Only
         ProfileInputRowDisplay(
             label = "Email :",
             value = email.ifEmpty { "Loading..." },
@@ -172,21 +157,16 @@ fun ProfileContent(
 
         Spacer(Modifier.height(50.dp))
 
-        // Tombol Edit
         EditProfileButton(onEditClick = onEditClick)
 
         Spacer(Modifier.height(16.dp))
 
-        // Tombol Logout
         LogoutButton(onLogoutClick = onLogoutClick)
 
         Spacer(Modifier.height(30.dp))
     }
 }
 
-/* ============================================================
-   CUSTOM INPUT ROW - DISPLAY ONLY
-============================================================ */
 @Composable
 fun ProfileInputRowDisplay(
     label: String,
@@ -234,9 +214,6 @@ fun ProfileInputRowDisplay(
     }
 }
 
-/* ============================================================
-   PROFILE AVATAR
-============================================================ */
 @Composable
 fun ProfileAvatar(avatarIndex: Int) {
     val borderColor = MaterialTheme.colorScheme.primary
@@ -255,7 +232,6 @@ fun ProfileAvatar(avatarIndex: Int) {
                 .border(borderWidth, borderColor, CircleShape)
                 .padding(borderWidth)
         ) {
-            // Use selected avatar resource if available
             val ctx = LocalContext.current
             val resId = ctx.resources.getIdentifier("avatar$avatarIndex", "drawable", ctx.packageName)
             val painter = if (resId != 0) painterResource(id = resId) else painterResource(id = R.drawable.ic_launcher_foreground)
@@ -266,15 +242,12 @@ fun ProfileAvatar(avatarIndex: Int) {
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant) // Background jika transparan
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             )
         }
     }
 }
 
-/* ============================================================
-   BUTTONS
-============================================================ */
 @Composable
 fun EditProfileButton(onEditClick: () -> Unit) {
     Button(
@@ -322,9 +295,6 @@ fun LogoutButton(onLogoutClick: () -> Unit) {
     }
 }
 
-/* ============================================================
-   BOTTOM NAVIGATION
-============================================================ */
 @Composable
 fun ProfileBottomBar() {
     Column {

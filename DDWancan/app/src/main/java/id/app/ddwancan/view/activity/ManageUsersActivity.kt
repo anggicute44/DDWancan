@@ -10,6 +10,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import com.google.firebase.firestore.FirebaseFirestore
 import id.app.ddwancan.data.model.UserItem
+import id.app.ddwancan.data.local.SettingsPreference
 import id.app.ddwancan.ui.theme.DDwancanTheme
 import id.app.ddwancan.view.screen.admin.ManageUsersScreen
 
@@ -25,7 +26,11 @@ class ManageUsersActivity : ComponentActivity() {
         fetchUsers()
 
         setContent {
-            DDwancanTheme {
+            val context = this@ManageUsersActivity
+            val settings = remember { SettingsPreference(context) }
+            val isDarkMode by settings.isDarkMode.collectAsState(initial = false)
+
+            DDwancanTheme(darkTheme = isDarkMode) {
                 // State untuk Dialog Konfirmasi
                 var showDialog by remember { mutableStateOf(false) }
                 var selectedUser by remember { mutableStateOf<UserItem?>(null) }

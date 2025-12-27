@@ -4,23 +4,23 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.*
+import id.app.ddwancan.data.local.SettingsPreference
 import id.app.ddwancan.ui.theme.DDwancanTheme
 import id.app.ddwancan.view.screen.settings.SettingsScreen
+import kotlinx.coroutines.launch
 
 class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
-            // PERBAIKAN: Panggil isSystemInDarkTheme() di sini, dalam konteks @Composable yang sah.
-            val systemIsDark = isSystemInDarkTheme()
-
-            // Gunakan nilainya untuk menginisialisasi state. Blok remember sekarang tidak
-            // lagi memanggil fungsi @Composable, sehingga valid.
-            var isDarkMode by remember { mutableStateOf(systemIsDark) }
-            var isEnglish by remember { mutableStateOf(false) }
+            val context = this@SettingsActivity
+            val settings = remember { SettingsPreference(context) }
+            val scope = rememberCoroutineScope()
+            
+            val isDarkMode by settings.isDarkMode.collectAsState(initial = false)
+            val isEnglish by settings.isEnglish.collectAsState(initial = false)
 
             DDwancanTheme(darkTheme = isDarkMode) {
                 SettingsScreen(
@@ -28,12 +28,16 @@ class SettingsActivity : ComponentActivity() {
                     isDarkMode = isDarkMode,
                     isEnglish = isEnglish,
                     onDarkModeChange = {
-                        isDarkMode = it
-                        Toast.makeText(this, "Mode Gelap: $it", Toast.LENGTH_SHORT).show()
+                        scope.launch {
+                            settings.saveDarkMode(it)
+                        }
+                        Toast.makeText(this@SettingsActivity, "Mode Gelap: $it", Toast.LENGTH_SHORT).show()
                     },
                     onLanguageChange = {
-                        isEnglish = it
-                        Toast.makeText(this, "Bahasa Inggris: $it", Toast.LENGTH_SHORT).show()
+                        scope.launch {
+                            settings.saveLanguage(it)
+                        }
+                        Toast.makeText(this@SettingsActivity, "Bahasa: $it", Toast.LENGTH_SHORT).show()
                     }
                 )
             }
