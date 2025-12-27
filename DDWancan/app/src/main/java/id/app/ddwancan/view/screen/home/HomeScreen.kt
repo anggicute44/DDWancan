@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -142,7 +143,7 @@ fun HomeScreen(
                         Spacer(Modifier.height(24.dp))
                         Text(if (isEnglish) "News Today" else "Berita Hari Ini", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(12.dp))
-                        BreakingNewsImage()
+                        BreakingCarousel(newsList = newsList)
                         Spacer(Modifier.height(24.dp))
                     }
 
@@ -163,7 +164,7 @@ fun HomeScreen(
                             if (favoriteViewModel.favorites.value.any { it.url == article.url }) {
                                 favoriteViewModel.removeFavorite(article.url)
                             } else {
-                                favoriteViewModel.addFavorite(article.url)
+                                favoriteViewModel.addFavorite(article)
                             }
                         })
                     }
@@ -234,6 +235,71 @@ fun BreakingNewsImage() {
             .height(200.dp)
             .background(Color.LightGray, RoundedCornerShape(12.dp))
     )
+}
+
+
+@Composable
+fun BreakingCarousel(newsList: List<id.app.ddwancan.data.model.Article>) {
+    val latest = remember(newsList) {
+        newsList.sortedByDescending { it.publishedAt }.take(3)
+    }
+
+    if (latest.isEmpty()) {
+        Box(modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .background(Color.LightGray, RoundedCornerShape(12.dp)))
+        return
+    }
+
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(horizontal = 8.dp)
+    ) {
+        items(latest) { article ->
+            Box(
+                modifier = Modifier
+                    .width((LocalContext.current.resources.displayMetrics.widthPixels / LocalContext.current.resources.displayMetrics.density).dp - 48.dp)
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            ) {
+                val painter = rememberAsyncImagePainter(model = article.urlToImage, placeholder = painterResource(id = R.drawable.news))
+                Image(
+                    painter = painter,
+                    contentDescription = article.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.matchParentSize()
+                )
+
+                // Gradient overlay at bottom for readability
+                Box(modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.5f)),
+                            startY = 80f
+                        )
+                    )
+                )
+
+                // Headline text bottom-right with ellipsis
+                Text(
+                    text = article.title,
+                    color = Color.White,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(12.dp)
+                        .widthIn(max = 240.dp),
+                    maxLines = 2,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
 }
 
 /* ============================================================
@@ -359,54 +425,4 @@ fun ApiNewsCard(
     }
 }
 
-/* ============================================================
-   BOTTOM NAVIGATION
-============================================================ */
-@Composable
-fun HomeBottomBar(context: android.content.Context) {
-    val ctx = LocalContext.current
-    val settings = remember { SettingsPreference(ctx) }
-    val isEnglish by settings.isEnglish.collectAsState(initial = false)
-
-    Column {
-        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
-        NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-
-            NavItem(Icons.Default.Home, if (isEnglish) "Home" else "Beranda", true) {}
-
-            NavItem(Icons.Default.Search, if (isEnglish) "Search" else "Pencarian") {
-                context.startActivity(Intent(context, SearchActivity::class.java))
-            }
-
-            NavItem(Icons.Default.Favorite, if (isEnglish) "Favorite" else "Favorit") {
-                context.startActivity(Intent(context, FavoriteActivity::class.java))
-            }
-
-            NavItem(Icons.Default.Person, if (isEnglish) "Profile" else "Profil") {
-                context.startActivity(Intent(context, ProfileActivity::class.java))
-            }
-        }
-    }
-}
-
-@Composable
-fun RowScope.NavItem(
-    icon: ImageVector,
-    label: String,
-    selected: Boolean = false,
-    onClick: () -> Unit
-) {
-    NavigationBarItem(
-        selected = selected,
-        onClick = onClick,
-        icon = { Icon(icon, contentDescription = label) },
-        label = { Text(label) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    indicatorColor = MaterialTheme.colorScheme.secondaryContainer
-                )
-    )
-}
+/* Bottom navigation is centralized in `navigation/BottomNavigationBar.kt` */

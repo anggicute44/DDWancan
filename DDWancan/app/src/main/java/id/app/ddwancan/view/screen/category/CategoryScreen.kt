@@ -38,7 +38,7 @@ import id.app.ddwancan.ui.theme.DDwancanTheme
 import id.app.ddwancan.view.activity.FavoriteActivity
 import id.app.ddwancan.view.activity.ProfileActivity
 import id.app.ddwancan.view.activity.SearchActivity
-import id.app.ddwancan.view.screen.home.NavItem
+//import id.app.ddwancan.view.screen.home.NavItem
 
 /* ============================================================
    CONSTANT (BIAR UKURAN KONSISTEN)
@@ -73,7 +73,7 @@ fun CategoryScreen(
     val isEnglish by settings.isEnglish.collectAsState(initial = false)
     Scaffold(
         topBar = { CategoryTopBar(category, onBack) },
-        bottomBar = { CategoryBottomBar(isEnglish) },
+        bottomBar = { id.app.ddwancan.navigation.BottomNavigationBar(id.app.ddwancan.navigation.NavRoutes.HOME) },
         containerColor = Color.White
     ) { padding ->
         CategoryContent(
@@ -297,37 +297,7 @@ fun MetaItem(
     }
 }
 
-/* ============================================================
-   BOTTOM NAV
-============================================================ */
-@Composable
-fun CategoryBottomBar(isEnglish: Boolean) {
-    Column {
-        HorizontalDivider(color = Color(0xFFE0E0E0))
-
-        NavigationBar(containerColor = Color.White) {
-
-            NavItem(Icons.Default.Home, if (isEnglish) "Home" else "Beranda", true) {}
-
-            NavItem(Icons.Default.Search, if (isEnglish) "Search" else "Cari") {
-                val context = null
-                context.startActivity(Intent(context, SearchActivity::class.java))
-            }
-
-            NavItem(Icons.Default.Favorite, if (isEnglish) "Favorite" else "Favorit") {
-                val context = null
-                context.startActivity(Intent(context, FavoriteActivity::class.java))
-            }
-
-            NavItem(Icons.Default.Person, if (isEnglish) "Profile" else "Profil") {
-                val context = null
-                context.startActivity(Intent(context, ProfileActivity::class.java))
-            }
-        }
-    }
-}
-
-private fun Nothing?.startActivity(intent: Intent) {}
+/* Bottom navigation moved to `navigation/BottomNavigationBar.kt` */
 
 /* ============================================================
    PREVIEW

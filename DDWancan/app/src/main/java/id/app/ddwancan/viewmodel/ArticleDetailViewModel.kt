@@ -27,14 +27,26 @@ class ArticleDetailViewModel(application: Application) : AndroidViewModel(applic
 
 		val docId = ArticleUtils.docIdFromUrl(articleUrl)
 
-		// Load favoritesCount from remote (best-effort)
-		db.collection("News").document(docId).get()
-			.addOnSuccessListener { doc ->
-				if (doc.exists()) {
-					favoritesCount.value = (doc.getLong("favoritesCount")?.toInt() ?: 0)
+		// Prefer local cached favoritesCount first (optimistic/offline). Then fetch remote and merge.
+		viewModelScope.launch {
+			try {
+				val localCount = try { dbLocal.articleDao().getFavoritesCount(articleUrl) } catch (_: Exception) { null }
+				if (localCount != null) {
+					favoritesCount.value = localCount
 				} else {
 					favoritesCount.value = 0
 				}
+			} catch (_: Exception) {
+				favoritesCount.value = 0
+			}
+		}
+
+		// Load favoritesCount from remote (best-effort) and take the max(remote, local)
+		db.collection("News").document(docId).get()
+			.addOnSuccessListener { doc ->
+				val remote = if (doc.exists()) (doc.getLong("favoritesCount")?.toInt() ?: 0) else 0
+				val current = favoritesCount.value
+				favoritesCount.value = maxOf(current, remote)
 			}
 			.addOnFailureListener { e -> error.value = e.message }
 
@@ -74,6 +86,10 @@ class ArticleDetailViewModel(application: Application) : AndroidViewModel(applic
 					isFavorited.value = false
 					// optimistic decrement so UI shows change while offline
 					favoritesCount.value = (favoritesCount.value - 1).coerceAtLeast(0)
+					// persist optimistic count to local articles table so list reflects change
+					viewModelScope.launch {
+						try { dbLocal.articleDao().updateFavoritesCount(articleUrl, favoritesCount.value) } catch (_: Exception) {}
+					}
 					val docId = ArticleUtils.docIdFromUrl(articleUrl)
 					try {
 						// attempt to delete user's favorite doc and update News counters
@@ -113,6 +129,10 @@ class ArticleDetailViewModel(application: Application) : AndroidViewModel(applic
 					isFavorited.value = true
 					// optimistic increment so UI shows change while offline
 					favoritesCount.value = favoritesCount.value + 1
+					// persist optimistic count to local articles table so list reflects change
+					viewModelScope.launch {
+						try { dbLocal.articleDao().updateFavoritesCount(articleUrl, favoritesCount.value) } catch (_: Exception) {}
+					}
 
 					val pending = PendingFavoriteEntity(articleUrl = articleUrl, userId = userId, action = "add")
 					dbLocal.pendingFavoriteDao().insertPendingFavorite(pending)

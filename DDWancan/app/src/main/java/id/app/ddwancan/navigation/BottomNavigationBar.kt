@@ -13,6 +13,10 @@ import androidx.compose.ui.platform.LocalContext
 import id.app.ddwancan.data.local.SettingsPreference
 import androidx.compose.ui.platform.LocalContext
 import id.app.ddwancan.view.activity.*
+import id.app.ddwancan.data.local.room.AppDatabase
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.runtime.collectAsState
 
 @Composable
 fun BottomNavigationBar(currentRoute: NavRoutes) {
@@ -47,6 +51,12 @@ fun BottomNavigationBar(currentRoute: NavRoutes) {
             label = { Text(if (isEnglish) "Search" else "Pencarian", color = if (currentRoute == NavRoutes.SEARCH) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) }
         )
 
+        // pending favorites badge
+        val db = AppDatabase.getInstance(context)
+        val pendingList by db.pendingFavoriteDao().getPendingFavorites().collectAsState(initial = emptyList())
+        // Count distinct article URLs to avoid duplicate pending rows inflating the badge
+        val pendingCount = pendingList.map { it.articleUrl }.distinct().size
+
         NavigationBarItem(
             selected = currentRoute == NavRoutes.FAVORITE,
             onClick = {
@@ -55,7 +65,15 @@ fun BottomNavigationBar(currentRoute: NavRoutes) {
                     activity.finish()
                 }
             },
-            icon = { Icon(Icons.Default.Favorite, null, tint = if (currentRoute == NavRoutes.FAVORITE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) },
+            icon = {
+                if (pendingCount > 0) {
+                    BadgedBox(badge = { Badge { Text(pendingCount.toString()) } }) {
+                        Icon(Icons.Default.Favorite, null, tint = if (currentRoute == NavRoutes.FAVORITE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                    }
+                } else {
+                    Icon(Icons.Default.Favorite, null, tint = if (currentRoute == NavRoutes.FAVORITE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                }
+            },
             label = { Text(if (isEnglish) "Favorite" else "Favorit", color = if (currentRoute == NavRoutes.FAVORITE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) }
         )
 
