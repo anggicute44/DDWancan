@@ -9,7 +9,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.core.content.ContextCompat
-// PERBAIKAN: Mengganti ComponentActivity dengan FragmentActivity
 import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -24,7 +23,6 @@ import id.app.ddwancan.ui.theme.DDwancanTheme
 import id.app.ddwancan.view.screen.auth.LoginScreen
 import java.util.concurrent.Executor
 
-// PERBAIKAN: Mengubah kelas induk ke FragmentActivity
 class LoginActivity : FragmentActivity() {
 
     private lateinit var auth: FirebaseAuth
@@ -44,8 +42,9 @@ class LoginActivity : FragmentActivity() {
             val credential = GoogleAuthProvider.getCredential(account.idToken, null)
             auth.signInWithCredential(credential)
                 .addOnSuccessListener {
+                    // PERBAIKAN: Langsung ke Home setelah sinkronisasi
                     syncUserToFirestoreAndProceed {
-                        goToFingerprint()
+                        goToHome()
                     }
                 }
                 .addOnFailureListener {
@@ -101,8 +100,9 @@ class LoginActivity : FragmentActivity() {
 
         auth.signInWithEmailAndPassword(email, password)
             .addOnSuccessListener {
+                // PERBAIKAN: Langsung ke Home setelah sinkronisasi
                 syncUserToFirestoreAndProceed {
-                    goToFingerprint()
+                    goToHome()
                 }
             }
             .addOnFailureListener {
@@ -133,7 +133,8 @@ class LoginActivity : FragmentActivity() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
                     Toast.makeText(this@LoginActivity, "Login sidik jari berhasil!", Toast.LENGTH_SHORT).show()
-                    goToFingerprint()
+                    // PERBAIKAN: Langsung ke Home, bukan ke FingerprintActivity
+                    goToHome()
                 }
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
@@ -156,13 +157,17 @@ class LoginActivity : FragmentActivity() {
             .build()
     }
 
-    private fun goToFingerprint() {
+    // PERBAIKAN: Fungsi baru untuk navigasi ke HomeActivity
+    private fun goToHome() {
         val currentUser = auth.currentUser
         UserSession.userId = currentUser?.uid
 
-        Log.d("LoginActivity", "User ID: ${UserSession.userId}")
+        Log.d("LoginActivity", "Login Success, User ID: ${UserSession.userId}. Navigating to Home.")
 
-        startActivity(Intent(this, FingerprintActivity::class.java))
+        val intent = Intent(this, HomeActivity::class.java)
+        // Flag ini penting untuk membuat HomeActivity sebagai root baru dan menghapus riwayat
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
         finish()
     }
 
@@ -185,6 +190,9 @@ class LoginActivity : FragmentActivity() {
             } else {
                 onDone()
             }
-        }.addOnFailureListener { onDone() }
+        }.addOnFailureListener {
+            // Tetap lanjutkan meskipun gagal sinkronisasi, agar user tidak stuck
+            onDone()
+        }
     }
 }
