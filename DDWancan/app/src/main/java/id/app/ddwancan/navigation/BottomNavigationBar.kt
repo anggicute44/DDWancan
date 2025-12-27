@@ -54,7 +54,8 @@ fun BottomNavigationBar(currentRoute: NavRoutes) {
         // pending favorites badge
         val db = AppDatabase.getInstance(context)
         val pendingList by db.pendingFavoriteDao().getPendingFavorites().collectAsState(initial = emptyList())
-        val pendingCount = pendingList.size
+        // Count distinct article URLs to avoid duplicate pending rows inflating the badge
+        val pendingCount = pendingList.map { it.articleUrl }.distinct().size
 
         NavigationBarItem(
             selected = currentRoute == NavRoutes.FAVORITE,

@@ -19,4 +19,7 @@ interface ArticleDao {
 
     @Query("UPDATE articles SET favoritesCount = :count WHERE url = :url")
     suspend fun updateFavoritesCount(url: String, count: Int)
+
+    @Query("SELECT favoritesCount FROM articles WHERE url = :url LIMIT 1")
+    suspend fun getFavoritesCount(url: String): Int?
 }

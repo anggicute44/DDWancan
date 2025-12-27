@@ -27,14 +27,26 @@ class ArticleDetailViewModel(application: Application) : AndroidViewModel(applic
 
 		val docId = ArticleUtils.docIdFromUrl(articleUrl)
 
-		// Load favoritesCount from remote (best-effort)
-		db.collection("News").document(docId).get()
-			.addOnSuccessListener { doc ->
-				if (doc.exists()) {
-					favoritesCount.value = (doc.getLong("favoritesCount")?.toInt() ?: 0)
+		// Prefer local cached favoritesCount first (optimistic/offline). Then fetch remote and merge.
+		viewModelScope.launch {
+			try {
+				val localCount = try { dbLocal.articleDao().getFavoritesCount(articleUrl) } catch (_: Exception) { null }
+				if (localCount != null) {
+					favoritesCount.value = localCount
 				} else {
 					favoritesCount.value = 0
 				}
+			} catch (_: Exception) {
+				favoritesCount.value = 0
+			}
+		}
+
+		// Load favoritesCount from remote (best-effort) and take the max(remote, local)
+		db.collection("News").document(docId).get()
+			.addOnSuccessListener { doc ->
+				val remote = if (doc.exists()) (doc.getLong("favoritesCount")?.toInt() ?: 0) else 0
+				val current = favoritesCount.value
+				favoritesCount.value = maxOf(current, remote)
 			}
 			.addOnFailureListener { e -> error.value = e.message }
 

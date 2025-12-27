@@ -49,17 +49,42 @@ class FavoriteViewModel(application: Application) : AndroidViewModel(application
 		viewModelScope.launch {
 			try {
 				// Insert local favorite immediately for instant UI feedback with full article data
-				try {
-					dbLocal.favoriteDao().insertFavorite(
-						id.app.ddwancan.data.local.room.FavoriteEntity(
-							url = article.url,
-							title = article.title,
-							description = article.description,
-							urlToImage = article.urlToImage,
-							publishedAt = article.publishedAt
+					try {
+						dbLocal.favoriteDao().insertFavorite(
+							id.app.ddwancan.data.local.room.FavoriteEntity(
+								url = article.url,
+								title = article.title,
+								description = article.description,
+								urlToImage = article.urlToImage,
+								publishedAt = article.publishedAt
+							)
 						)
-					)
-				} catch (_: Exception) {}
+						// optimistic update: increment local article favoritesCount so list UI reflects change
+						try {
+							val cur = dbLocal.articleDao().getFavoritesCount(article.url)
+							if (cur == null) {
+								// Article not present in articles table: upsert minimal entry with favoritesCount = 1
+								try {
+									dbLocal.articleDao().upsertArticles(
+										listOf(id.app.ddwancan.data.local.room.ArticleEntity(
+											url = article.url,
+											title = article.title ?: "",
+											description = article.description,
+											author = article.author,
+											urlToImage = article.urlToImage,
+											publishedAt = article.publishedAt,
+											sourceId = article.source?.id,
+											sourceName = article.source?.name,
+											favoritesCount = 1
+										)
+                                        )
+                                    )
+								} catch (_: Exception) {}
+							} else {
+								try { dbLocal.articleDao().updateFavoritesCount(article.url, cur + 1) } catch (_: Exception) {}
+							}
+						} catch (_: Exception) {}
+					} catch (_: Exception) {}
 
 				val pendingId = dbLocal.pendingFavoriteDao().insertPendingFavorite(
 					PendingFavoriteEntity(articleUrl = article.url, userId = uid, action = "add")
@@ -92,8 +117,15 @@ class FavoriteViewModel(application: Application) : AndroidViewModel(application
 		val uid = UserSession.userId ?: return
 		viewModelScope.launch {
 			try {
-				// remove local immediately
-				try { dbLocal.favoriteDao().deleteByUrl(articleUrl) } catch (_: Exception) {}
+					// remove local immediately
+					try { dbLocal.favoriteDao().deleteByUrl(articleUrl) } catch (_: Exception) {}
+					// optimistic decrement on articles table so list UI reflects change
+					try {
+						val cur = dbLocal.articleDao().getFavoritesCount(articleUrl)
+						if (cur != null) {
+							try { dbLocal.articleDao().updateFavoritesCount(articleUrl, (cur - 1).coerceAtLeast(0)) } catch (_: Exception) {}
+						}
+					} catch (_: Exception) {}
 				// insert pending remove
 				val pendingId = dbLocal.pendingFavoriteDao().insertPendingFavorite(
 					PendingFavoriteEntity(articleUrl = articleUrl, userId = uid, action = "remove")
