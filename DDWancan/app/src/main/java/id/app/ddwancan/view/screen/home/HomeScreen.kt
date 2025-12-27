@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -142,7 +143,7 @@ fun HomeScreen(
                         Spacer(Modifier.height(24.dp))
                         Text(if (isEnglish) "News Today" else "Berita Hari Ini", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(12.dp))
-                        BreakingNewsImage()
+                        BreakingCarousel(newsList = newsList)
                         Spacer(Modifier.height(24.dp))
                     }
 
@@ -234,6 +235,71 @@ fun BreakingNewsImage() {
             .height(200.dp)
             .background(Color.LightGray, RoundedCornerShape(12.dp))
     )
+}
+
+
+@Composable
+fun BreakingCarousel(newsList: List<id.app.ddwancan.data.model.Article>) {
+    val latest = remember(newsList) {
+        newsList.sortedByDescending { it.publishedAt }.take(3)
+    }
+
+    if (latest.isEmpty()) {
+        Box(modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .background(Color.LightGray, RoundedCornerShape(12.dp)))
+        return
+    }
+
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(horizontal = 8.dp)
+    ) {
+        items(latest) { article ->
+            Box(
+                modifier = Modifier
+                    .width((LocalContext.current.resources.displayMetrics.widthPixels / LocalContext.current.resources.displayMetrics.density).dp - 48.dp)
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            ) {
+                val painter = rememberAsyncImagePainter(model = article.urlToImage, placeholder = painterResource(id = R.drawable.news))
+                Image(
+                    painter = painter,
+                    contentDescription = article.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.matchParentSize()
+                )
+
+                // Gradient overlay at bottom for readability
+                Box(modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.5f)),
+                            startY = 80f
+                        )
+                    )
+                )
+
+                // Headline text bottom-right with ellipsis
+                Text(
+                    text = article.title,
+                    color = Color.White,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(12.dp)
+                        .widthIn(max = 240.dp),
+                    maxLines = 2,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
 }
 
 /* ============================================================
