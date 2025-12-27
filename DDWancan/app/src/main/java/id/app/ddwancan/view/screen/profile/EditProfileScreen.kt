@@ -19,7 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -285,46 +287,52 @@ fun EditProfileContent(
 
 @Composable
 fun AvatarSelector(selectedAvatar: Int, onSelectedAvatarChange: (Int) -> Unit) {
-    val avatars = listOf(
-        Icons.Outlined.Face,
-        Icons.Outlined.AccountCircle,
-        Icons.Outlined.Person,
-        Icons.Outlined.SupervisorAccount,
-        Icons.Outlined.Pets,
-        Icons.Outlined.EmojiEmotions
-    )
+    val context = LocalContext.current
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(
-            imageVector = avatars.getOrElse(selectedAvatar) { avatars[0] },
-            contentDescription = "Selected Avatar",
+        val resId = context.resources.getIdentifier("avatar$selectedAvatar", "drawable", context.packageName)
+        val painter = if (resId != 0) painterResource(id = resId) else painterResource(id = id.app.ddwancan.R.drawable.ic_launcher_foreground)
+        Image(
+            painter = painter,
+            contentDescription = "Current Avatar",
             modifier = Modifier
-                .size(120.dp)
+                .size(110.dp)
                 .clip(CircleShape)
-                .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                .padding(16.dp),
-            tint = MaterialTheme.colorScheme.primary
+                .background(MaterialTheme.colorScheme.surface)
+                .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape),
+            contentScale = ContentScale.Crop
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(8.dp))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            avatars.forEachIndexed { index, icon ->
-                Icon(
-                    imageVector = icon,
-                    contentDescription = "Avatar $index",
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .border(
-                            width = if (index == selectedAvatar) 2.dp else 0.dp,
-                            color = if (index == selectedAvatar) MaterialTheme.colorScheme.primary else Color.Transparent,
-                            shape = CircleShape
+        // Avatar selection grid (8 avatars)
+        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            for (rowStart in listOf(0, 4)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    for (i in rowStart until rowStart + 4) {
+                        val idRes = context.resources.getIdentifier("avatar$i", "drawable", context.packageName)
+                        val imgPainter = if (idRes != 0) painterResource(id = idRes) else painterResource(id = id.app.ddwancan.R.drawable.ic_launcher_foreground)
+                        Image(
+                            painter = imgPainter,
+                            contentDescription = "avatar_$i",
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(CircleShape)
+                                .border(
+                                    width = if (selectedAvatar == i) 2.dp else 1.dp,
+                                    color = if (selectedAvatar == i) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                                    shape = CircleShape
+                                )
+                                .clickable { onSelectedAvatarChange(i) },
+                            contentScale = ContentScale.Crop
                         )
-                        .clickable { onSelectedAvatarChange(index) }
-                        .padding(4.dp),
-                    tint = if (index == selectedAvatar) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
             }
         }
     }
